@@ -1,8 +1,12 @@
 package grupo4.ss.itba.edu.ar.model;
 
+import lombok.Getter;
+
 public class Vector
 {
+    @Getter
     private final double x;
+    @Getter
     private final double y;
 
     public Vector( double x, double y ) {
@@ -20,6 +24,10 @@ public class Vector
 
     public static Vector multiply( Vector vector, double c ) {
         return new Vector( vector.x * c, vector.y * c );
+    }
+
+    public static double dot( Vector vector1, Vector vector2) {
+        return vector1.x * vector2.x + vector1.y * vector2.y;
     }
 
     public static Vector sum( Vector vector1, Vector vector2 ) {

@@ -21,6 +21,8 @@ public class Particle
     private static final double A = 2e3;
     private static final double B = 0.08;
     private static final double accelerationTime = 0.5;
+    private static final double kn = 1.2e5;
+    private static final double kt = 2.4e5;
 
     /**
      * constant from "TP5: Medios Granulares y Dinámica Peatonal" ejercicio 2 maxDesiredSpeed = 2m/s
@@ -36,10 +38,49 @@ public class Particle
         this.targetPositionY = builder.targetPositionY;
         this.mass = builder.mass;
         this.radius = builder.radius;
+        this.desiredSpeed = builder.desiredSpeed;
     }
 
     private double getSpeed() {
         return this.velocity.getLength();
+    }
+
+    private Vector getContactForce( Particle other ) {
+        final double borderDistanceLength = this.getBorderDistanceLength( other );
+        final Vector normal = Vector.multiply( this.getNormalUnitVector( other ), -borderDistanceLength * Particle.kn );
+        final Vector tangentialUnitVector = this.getTangentialUnitVector( other );
+        final double tangentialVelocity = Vector.dot( Vector.minus( other.velocity, this.velocity ),
+                                                      tangentialUnitVector );
+        final Vector tangent = Vector.multiply( this.getTangentialUnitVector( other ),
+                                                tangentialVelocity * borderDistanceLength * Particle.kt );
+
+        return Vector.sum( normal, tangent );
+    }
+
+    private Vector getSocialForce( Particle other ) {
+        return Vector.multiply( this.getNormalUnitVector( other ),
+                                Particle.A * Math.exp( -this.getBorderDistanceLength( other ) / Particle.B ) );
+    }
+
+    private double getBorderDistanceLength( Particle other ) {
+        return this.getDistanceLength( other ) - ( this.radius + other.radius );
+    }
+
+    private Vector getDistance( Particle other ) {
+        return new Vector( this.positionX - other.positionX, this.positionY - other.positionY );
+    }
+
+    private Vector getTangentialUnitVector( Particle other ) {
+        final Vector normal = this.getNormalUnitVector( other );
+        return new Vector( -normal.getY(), normal.getX() );
+    }
+
+    private Vector getNormalUnitVector( Particle other ) {
+        return this.getDistance( other ).getUnitVector();
+    }
+
+    private double getDistanceLength( Particle other ) {
+        return getDistance( other ).getLength();
     }
 
     private Vector getDrivingForce() {
