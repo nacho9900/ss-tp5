@@ -5,11 +5,9 @@ import java.util.UUID;
 public class Particle
 {
     private UUID id;
-    private double positionX;
-    private double positionY;
+    private Point position;
     private Vector velocity;
-    private double targetPositionX;
-    private double targetPositionY;
+    private Point target;
     private double mass;
     private double radius;
     private double desiredSpeed;
@@ -31,11 +29,9 @@ public class Particle
 
     private Particle( ParticleBuilder builder ) {
         this.id = builder.id;
-        this.positionX = builder.positionX;
-        this.positionY = builder.positionY;
+        this.position = new Point( builder.positionX, builder.positionY );
         this.velocity = new Vector( builder.velocityX, builder.velocityY );
-        this.targetPositionX = builder.targetPositionX;
-        this.targetPositionY = builder.targetPositionY;
+        this.target = new Point( builder.targetPositionX, builder.targetPositionY );
         this.mass = builder.mass;
         this.radius = builder.radius;
         this.desiredSpeed = builder.desiredSpeed;
@@ -48,6 +44,7 @@ public class Particle
     private Vector getContactForce( Particle other ) {
         final double borderDistanceLength = this.getBorderDistanceLength( other );
         final Vector normal = Vector.multiply( this.getNormalUnitVector( other ), -borderDistanceLength * Particle.kn );
+
         final Vector tangentialUnitVector = this.getTangentialUnitVector( other );
         final double tangentialVelocity = Vector.dot( Vector.minus( other.velocity, this.velocity ),
                                                       tangentialUnitVector );
@@ -67,7 +64,7 @@ public class Particle
     }
 
     private Vector getDistance( Particle other ) {
-        return new Vector( this.positionX - other.positionX, this.positionY - other.positionY );
+        return new Vector( this.position.getX() - other.position.getX(), this.position.getY() - other.position.getY() );
     }
 
     private Vector getTangentialUnitVector( Particle other ) {
@@ -76,7 +73,8 @@ public class Particle
     }
 
     private Vector getNormalUnitVector( Particle other ) {
-        return this.getDistance( other ).getUnitVector();
+        return this.getDistance( other )
+                   .getUnitVector();
     }
 
     private double getDistanceLength( Particle other ) {
@@ -89,12 +87,24 @@ public class Particle
     }
 
     private Vector getDesiredVelocity() {
-        Vector desiredDirection = new Vector( this.targetPositionX - this.positionX,
-                                              this.targetPositionY - this.positionY ).getUnitVector();
+        Vector desiredDirection = new Vector( this.target.getX() - this.position.getX(),
+                                              this.target.getX() - this.position.getX() ).getUnitVector();
         return Vector.multiply( desiredDirection, this.desiredSpeed );
     }
 
-    public static ParticleBuilder newBuilder() {
+    /* package */ Particle getCopy() {
+        return Particle.builder()
+                       .withId( this.id )
+                       .withMass( this.mass )
+                       .withPosition( this.position.getX(), this.position.getY() )
+                       .withVelocity( this.velocity.getX(), this.velocity.getY() )
+                       .withTarget( this.target.getX(), this.target.getY() )
+                       .withDesiredSpeed( this.desiredSpeed )
+                       .withRadius( this.radius )
+                       .build();
+    }
+
+    public static ParticleBuilder builder() {
         return new ParticleBuilder();
     }
 
