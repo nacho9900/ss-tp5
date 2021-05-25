@@ -1,5 +1,6 @@
 package grupo4.ss.itba.edu.ar.model;
 
+import java.util.List;
 import java.util.UUID;
 
 public class Particle
@@ -7,7 +8,7 @@ public class Particle
     private UUID id;
     private Point position;
     private Vector velocity;
-    private Point target;
+    private Target target;
     private double mass;
     private double radius;
     private double desiredSpeed;
@@ -22,16 +23,11 @@ public class Particle
     private static final double kn = 1.2e5;
     private static final double kt = 2.4e5;
 
-    /**
-     * constant from "TP5: Medios Granulares y Dinámica Peatonal" ejercicio 2 maxDesiredSpeed = 2m/s
-     **/
-    private static final double maxDesiredSpeed = 2;
-
     private Particle( ParticleBuilder builder ) {
         this.id = builder.id;
         this.position = new Point( builder.positionX, builder.positionY );
         this.velocity = new Vector( builder.velocityX, builder.velocityY );
-        this.target = new Point( builder.targetPositionX, builder.targetPositionY );
+        this.target = builder.target;
         this.mass = builder.mass;
         this.radius = builder.radius;
         this.desiredSpeed = builder.desiredSpeed;
@@ -41,44 +37,91 @@ public class Particle
         return this.velocity.getLength();
     }
 
-    private Vector getContactForce( Particle other ) {
-        final double borderDistanceLength = this.getBorderDistanceLength( other );
-        final Vector normal = Vector.multiply( this.getNormalUnitVector( other ), -borderDistanceLength * Particle.kn );
+    private Vector getForce( List<Particle> particles, List<Wall> walls ) {
+        Vector interactionForce = new Vector( 0, 0 );
+
+        for ( Particle particle : particles ) {
+            if ( !this.equals( particle ) ) {
+                interactionForce = Vector.sum( interactionForce, this.getInteractionForce( particle ) );
+            }
+        }
+
+        for ( Wall wall : walls ) {
+            interactionForce = Vector.sum( interactionForce, this.getInteractionForce( wall ) );
+        }
+
+        return Vector.sum( this.getDrivingForce(), interactionForce );
+    }
+
+    private Vector getInteractionForce( Wall wall ) {
+        Point closestPoint = wall.getClosestPoint( this.position );
+        Vector normalVector = this.position.getNormalVector( closestPoint );
+        Vector tangentUnitVector = this.position.getTangentialVector( closestPoint )
+                                                .getUnitVector();
+        double separation = this.radius - normalVector.getLength();
+        double g = this.g( closestPoint );
+
+        Vector normal = Vector.multiply( normalVector.getUnitVector(),
+                                         ( Particle.A * Math.exp( separation / Particle.B ) ) + g * Particle.kn );
+
+        if ( g == 0 ) {
+            return normal;
+        }
+
+        double tangentSpeed = Vector.dot( this.velocity, tangentUnitVector );
+        Vector tangent = Vector.multiply( tangentUnitVector, Particle.kt * g * tangentSpeed );
+
+        return Vector.minus( normal, tangent );
+    }
+
+    private Vector getInteractionForce( Particle other ) {
+        final double separation = this.getSeparationLength( other );
+        final double g = this.g( other );
+
+        final Vector normal = Vector.multiply( this.getNormalUnitVector( other ),
+                                               Particle.A * Math.exp( separation / Particle.B ) + g * Particle.kn );
+
+        if ( g == 0 ) {
+            return normal;
+        }
 
         final Vector tangentialUnitVector = this.getTangentialUnitVector( other );
         final double tangentialVelocity = Vector.dot( Vector.minus( other.velocity, this.velocity ),
                                                       tangentialUnitVector );
         final Vector tangent = Vector.multiply( this.getTangentialUnitVector( other ),
-                                                tangentialVelocity * borderDistanceLength * Particle.kt );
+                                                Particle.kt * g * tangentialVelocity );
 
         return Vector.sum( normal, tangent );
     }
 
-    private Vector getSocialForce( Particle other ) {
-        return Vector.multiply( this.getNormalUnitVector( other ),
-                                Particle.A * Math.exp( -this.getBorderDistanceLength( other ) / Particle.B ) );
+    private double g( Point point ) {
+        double separation = this.radius - this.position.getNormalVector( point )
+                                                       .getLength();
+        return separation >= 0 ? separation : 0;
     }
 
-    private double getBorderDistanceLength( Particle other ) {
-        return this.getDistanceLength( other ) - ( this.radius + other.radius );
+    private double g( Particle other ) {
+        double separation = this.getSeparationLength( other );
+        return separation >= 0 ? separation : 0;
     }
 
-    private Vector getDistance( Particle other ) {
-        return new Vector( this.position.getX() - other.position.getX(), this.position.getY() - other.position.getY() );
+    private double getSeparationLength( Particle other ) {
+        return ( this.radius + other.radius ) - this.getDistanceLength( other );
     }
 
     private Vector getTangentialUnitVector( Particle other ) {
-        final Vector normal = this.getNormalUnitVector( other );
-        return new Vector( -normal.getY(), normal.getX() );
+        return this.position.getTangentialVector( other.position )
+                            .getUnitVector();
     }
 
     private Vector getNormalUnitVector( Particle other ) {
-        return this.getDistance( other )
-                   .getUnitVector();
+        return this.position.getNormalVector( other.position )
+                            .getUnitVector();
     }
 
     private double getDistanceLength( Particle other ) {
-        return getDistance( other ).getLength();
+        return this.position.getNormalVector( other.position )
+                            .getLength();
     }
 
     private Vector getDrivingForce() {
@@ -87,8 +130,9 @@ public class Particle
     }
 
     private Vector getDesiredVelocity() {
-        Vector desiredDirection = new Vector( this.target.getX() - this.position.getX(),
-                                              this.target.getX() - this.position.getX() ).getUnitVector();
+        Point targetPoint = target.getTargetPoint( this.position );
+        Vector desiredDirection = new Vector( targetPoint.getX() - this.position.getX(),
+                                              targetPoint.getY() - this.position.getY() ).getUnitVector();
         return Vector.multiply( desiredDirection, this.desiredSpeed );
     }
 
@@ -98,7 +142,7 @@ public class Particle
                        .withMass( this.mass )
                        .withPosition( this.position.getX(), this.position.getY() )
                        .withVelocity( this.velocity.getX(), this.velocity.getY() )
-                       .withTarget( this.target.getX(), this.target.getY() )
+                       .withTarget( this.target )
                        .withDesiredSpeed( this.desiredSpeed )
                        .withRadius( this.radius )
                        .build();
@@ -115,8 +159,7 @@ public class Particle
         private double positionY;
         private double velocityX;
         private double velocityY;
-        private double targetPositionX;
-        private double targetPositionY;
+        private Target target;
         private double mass;
         private double radius;
         private double desiredSpeed;
@@ -162,9 +205,8 @@ public class Particle
             return this;
         }
 
-        public ParticleBuilder withTarget( double targetPositionX, double targetPositionY ) {
-            this.targetPositionX = targetPositionX;
-            this.targetPositionY = targetPositionY;
+        public ParticleBuilder withTarget( Target target ) {
+            this.target = target;
             return this;
         }
 

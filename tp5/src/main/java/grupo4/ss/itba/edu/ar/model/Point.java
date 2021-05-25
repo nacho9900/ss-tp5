@@ -13,4 +13,16 @@ public class Point
         this.x = x;
         this.y = y;
     }
+
+    public Vector getNormalVector( Point other ) {
+        return new Vector( this.getX() - other.getX(), this.getY() - other.getY() );
+    }
+
+    public Vector getTangentialVector( Point other ) {
+        Vector normal = this.getNormalVector( other );
+        double x = -normal.getY();
+        normal.setY( normal.getX() );
+        normal.setX( x );
+        return normal;
+    }
 }

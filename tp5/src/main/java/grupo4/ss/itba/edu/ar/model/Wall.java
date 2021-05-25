@@ -1,8 +1,8 @@
 package grupo4.ss.itba.edu.ar.model;
 
-public class LinearWall extends Line
+public class Wall extends Line
 {
-    private LinearWall( Builder builder ) {
+    private Wall( Builder builder ) {
         super( builder );
     }
 
@@ -22,8 +22,8 @@ public class LinearWall extends Line
             return (Builder) super.withEnd( endPositionX, endPositionY );
         }
 
-        public LinearWall build() {
-            return new LinearWall( this );
+        public Wall build() {
+            return new Wall( this );
         }
     }
 }

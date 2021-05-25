@@ -1,13 +1,16 @@
 package grupo4.ss.itba.edu.ar.model;
 
 import lombok.Getter;
+import lombok.Setter;
 
 public class Vector
 {
     @Getter
-    private final double x;
+    @Setter
+    private double x;
     @Getter
-    private final double y;
+    @Setter
+    private double y;
 
     public Vector( double x, double y ) {
         this.x = x;
