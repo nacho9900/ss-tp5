@@ -65,7 +65,7 @@ public class Particle
     }
 
     private void move( ParticleMovementOperator operator, double dt ) {
-        operator.move( this, dt );
+        operator.move( this, dt, desiredSpeed );
     }
 
     private Vector getForce( List<Particle> particles, List<Wall> walls ) {
