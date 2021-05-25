@@ -25,4 +25,13 @@ public class Point
         normal.setX( x );
         return normal;
     }
+
+    public Vector asVector() {
+        return new Vector( this.x, this.y );
+    }
+
+    @Override
+    public String toString() {
+        return "Point{" + "x=" + x + ", y=" + y + '}';
+    }
 }

@@ -13,6 +13,11 @@ public class EnvironmentState
         this.time = builder.time;
     }
 
+    public void appendToStringBuilder(StringBuilder stringBuilder) {
+        stringBuilder.append( particles.size() ).append( System.lineSeparator() ).append( System.lineSeparator() );
+        particles.forEach( x -> x.appendToStringBuilder( stringBuilder ) );
+    }
+
     public static Builder builder() {
         return new Builder();
     }

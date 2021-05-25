@@ -1,17 +1,36 @@
 package grupo4.ss.itba.edu.ar.model;
 
+import lombok.Getter;
+import lombok.Setter;
+
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 public class Particle
 {
-    private UUID id;
+    private final UUID id;
+    private final double mass;
+    @Getter
+    private final double radius;
+    private final double desiredSpeed;
+    @Getter
+    private final List<ParticleState> states;
+    @Getter
+    @Setter
     private Point position;
+    @Getter
+    @Setter
     private Vector velocity;
+    private Vector force;
+    @Getter
+    private Vector acceleration;
+    @Getter
+    @Setter
     private Target target;
-    private double mass;
-    private double radius;
-    private double desiredSpeed;
+    private final EulerMethodOperator eulerMethodOperator;
+    private final VerletMovementOperator verletMovementOperator;
 
     /**
      * constants from paper "Simulating dynamical features of escape panic" A = 2x10³N B = 0.08m accelerationTime =
@@ -31,10 +50,22 @@ public class Particle
         this.mass = builder.mass;
         this.radius = builder.radius;
         this.desiredSpeed = builder.desiredSpeed;
+        this.states = new LinkedList<>();
+        this.eulerMethodOperator = new EulerMethodOperator();
+        this.verletMovementOperator = new VerletMovementOperator();
     }
 
-    private double getSpeed() {
-        return this.velocity.getLength();
+    public void move( double dt ) {
+        if ( states.isEmpty() ) {
+            this.move( eulerMethodOperator, dt );
+        }
+        else {
+            this.move( verletMovementOperator, dt );
+        }
+    }
+
+    private void move( ParticleMovementOperator operator, double dt ) {
+        operator.move( this, dt );
     }
 
     private Vector getForce( List<Particle> particles, List<Wall> walls ) {
@@ -53,13 +84,18 @@ public class Particle
         return Vector.sum( this.getDrivingForce(), interactionForce );
     }
 
+    public void setForceAndAcceleration( List<Particle> particles, List<Wall> walls ) {
+        this.force = this.getForce( particles, walls );
+        this.acceleration = Vector.multiply( this.force, 1.0 / this.mass );
+    }
+
     private Vector getInteractionForce( Wall wall ) {
         Point closestPoint = wall.getClosestPoint( this.position );
         Vector normalVector = this.position.getNormalVector( closestPoint );
         Vector tangentUnitVector = this.position.getTangentialVector( closestPoint )
                                                 .getUnitVector();
         double separation = this.radius - normalVector.getLength();
-        double g = this.g( closestPoint );
+        double g = this.g( separation );
 
         Vector normal = Vector.multiply( normalVector.getUnitVector(),
                                          ( Particle.A * Math.exp( separation / Particle.B ) ) + g * Particle.kn );
@@ -76,7 +112,7 @@ public class Particle
 
     private Vector getInteractionForce( Particle other ) {
         final double separation = this.getSeparationLength( other );
-        final double g = this.g( other );
+        final double g = this.g( separation );
 
         final Vector normal = Vector.multiply( this.getNormalUnitVector( other ),
                                                Particle.A * Math.exp( separation / Particle.B ) + g * Particle.kn );
@@ -94,14 +130,7 @@ public class Particle
         return Vector.sum( normal, tangent );
     }
 
-    private double g( Point point ) {
-        double separation = this.radius - this.position.getNormalVector( point )
-                                                       .getLength();
-        return separation >= 0 ? separation : 0;
-    }
-
-    private double g( Particle other ) {
-        double separation = this.getSeparationLength( other );
+    private double g( double separation ) {
         return separation >= 0 ? separation : 0;
     }
 
@@ -136,6 +165,10 @@ public class Particle
         return Vector.multiply( desiredDirection, this.desiredSpeed );
     }
 
+    public boolean areOverlapped( Particle other ) {
+        return this.getSeparationLength( other ) >= 0;
+    }
+
     /* package */ Particle getCopy() {
         return Particle.builder()
                        .withId( this.id )
@@ -146,6 +179,44 @@ public class Particle
                        .withDesiredSpeed( this.desiredSpeed )
                        .withRadius( this.radius )
                        .build();
+    }
+
+    public void appendToStringBuilder( StringBuilder stringBuilder ) {
+        stringBuilder.append( this.position.getX() )
+                     .append( " " )
+                     .append( this.position.getY() )
+                     .append( " " )
+                     .append( this.radius )
+                     .append( " " )
+                     .append( this.velocity.getX() )
+                     .append( " " )
+                     .append( this.velocity.getY() )
+                     .append( " " )
+                     .append( this.velocity.getLength() / this.desiredSpeed ) //R
+                     .append( " " )
+                     .append( 1.0 - ( this.velocity.getLength() / this.desiredSpeed ) ) //G
+                     .append( " " )
+                     .append( "0" )
+                     .append( System.lineSeparator() );
+    }
+
+    @Override
+    public boolean equals( Object o ) {
+        if ( this == o ) {
+            return true;
+        }
+        if ( o == null || getClass() != o.getClass() ) {
+            return false;
+        }
+
+        Particle particle = (Particle) o;
+
+        return Objects.equals( id, particle.id );
+    }
+
+    @Override
+    public int hashCode() {
+        return id != null ? id.hashCode() : 0;
     }
 
     public static ParticleBuilder builder() {

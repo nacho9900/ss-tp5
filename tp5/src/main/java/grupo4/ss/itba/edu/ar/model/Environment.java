@@ -18,8 +18,69 @@ public class Environment
     private final Target target1;
     private final Target target2;
     private final List<EnvironmentState> states = new LinkedList<>();
+    private List<Particle> particles;
+    private final double dt;
+
+    private Environment( Builder builder ) {
+        this.walls = builder.walls;
+        this.target1 = builder.target1;
+        this.target2 = builder.target2;
+        this.particles = builder.particles;
+        this.dt = builder.dt;
+        this.states.add( EnvironmentState.builder()
+                                         .withParticles( this.particles )
+                                         .withTime( 0 )
+                                         .build() );
+    }
+
+    public void run() {
+        int i = 0;
+        while ( !this.particles.isEmpty() && i < 60000 ) {
+            System.out.printf( "{i: %d; q: %d }%n", i, this.particles.size() );
+            i++;
+            this.particles.forEach( x -> x.setForceAndAcceleration( this.particles, this.walls ) );
+            List<Particle> particles = new LinkedList<>();
+
+            for ( Particle particle : this.particles ) {
+                particle.move( this.dt );
+                if ( !target2.reached( particle ) ) {
+                    if ( target1.reached( particle ) ) {
+                        particle.setTarget( this.target2 );
+                    }
+                    particles.add( particle );
+                }
+            }
+
+            this.states.add( EnvironmentState.builder()
+                                             .withParticles( this.particles )
+                                             .withTime( i * dt )
+                                             .build() );
+            this.particles = particles;
+        }
+    }
 
     public void printToFile() {
+        printStatic();
+        printParticles();
+    }
+
+    private void printParticles() {
+        String particlesName = "particles.xyz";
+        StringBuilder builder = new StringBuilder();
+        try ( BufferedWriter writer = new BufferedWriter( new FileWriter( particlesName ) ) ) {
+            for ( EnvironmentState state : this.states ) {
+                builder.setLength( 0 );
+                state.appendToStringBuilder( builder );
+                writer.write( builder.toString() );
+                writer.flush();
+            }
+        }
+        catch ( IOException e ) {
+            e.printStackTrace();
+        }
+    }
+
+    private void printStatic() {
         String staticFilename = "static.xyz";
 
         try ( BufferedWriter writer = new BufferedWriter( new FileWriter( staticFilename ) ) ) {
@@ -41,12 +102,6 @@ public class Environment
         }
     }
 
-    private Environment( Builder builder ) {
-        this.walls = builder.walls;
-        this.target1 = builder.target1;
-        this.target2 = builder.target2;
-    }
-
     public static Builder builder() {
         return new Builder();
     }
@@ -58,6 +113,7 @@ public class Environment
         private Optional<Integer> seed;
         private Target target1;
         private Target target2;
+        private double dt;
 
         private Builder() {
             this.walls = new LinkedList<>();
@@ -122,19 +178,40 @@ public class Environment
                                 .orElseGet( Random::new );
 
             for ( int i = 0; i < quantity; i++ ) {
+                double radius = MathHelper.randBetween( random, 0.5 / 2.0, 0.7 / 2.0 );
+                double x = MathHelper.randBetween( random, 0 + radius, 20 - radius );
+                double y = MathHelper.randBetween( random, 0 + radius, 20 - radius );
+
                 Particle particle = Particle.builder()
                                             .withId( UUID.randomUUID() )
                                             .withMass( 80 )
-                                            .withRadius( MathHelper.randBetween( random, 0.5 / 2.0, 0.58 / 2.0 ) )
+                                            .withRadius( radius )
                                             .withDesiredSpeed( 2 )
                                             .withTarget( this.target1 )
-                                            .withPosition( MathHelper.randBetween( random, 0, 20 ),
-                                                           MathHelper.randBetween( random, 0, 20 ) )
+                                            .withPosition( x, y )
                                             .withVelocity( 0, 0 )
                                             .build();
+
+                while ( !notOverlap( particle ) ) //TODO: Condicion de corte
+                {
+                    x = MathHelper.randBetween( random, 0 + radius, 20 - radius );
+                    y = MathHelper.randBetween( random, 0 + radius, 20 - radius );
+                    particle.setPosition( new Point( x, y ) );
+                }
+
                 this.particles.add( particle );
             }
 
+            return this;
+        }
+
+        public boolean notOverlap( Particle particle ) {
+            return this.particles.stream()
+                                 .noneMatch( x -> x.areOverlapped( particle ) );
+        }
+
+        public Builder withDt( double dt ) {
+            this.dt = dt;
             return this;
         }
 

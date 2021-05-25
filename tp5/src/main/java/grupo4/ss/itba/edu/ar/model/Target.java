@@ -12,20 +12,20 @@ public class Target extends Line
         }
     }
 
-    public Point getTargetPoint(Point point) {
-        if(point.getX() <= this.start.getX()) {
+    public Point getTargetPoint( Point point ) {
+        if ( point.getX() <= this.start.getX() ) {
             return new Point( this.start.getX(), this.start.getY() );
         }
 
-        if(point.getX() >= this.end.getX()) {
+        if ( point.getX() >= this.end.getX() ) {
             return new Point( this.end.getX(), this.end.getY() );
         }
 
         return new Point( point.getX(), this.start.getY() );
     }
 
-    public boolean isBelow(Point point) {
-        return point.getY() > this.start.getY();
+    public boolean reached( Particle particle ) {
+        return particle.getPosition().getY() + particle.getRadius() <= this.end.getY();
     }
 
     public static Builder builder() {

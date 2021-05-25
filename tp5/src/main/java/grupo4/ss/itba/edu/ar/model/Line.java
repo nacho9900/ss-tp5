@@ -22,11 +22,18 @@ public abstract class Line
     public Point getClosestPoint( Point point ) {
         Optional<Double> maybeSlope = this.getSlope();
         double perpendicularSlope;
-        if ( maybeSlope.isEmpty() ) {
+        if ( maybeSlope.isEmpty() ) { // Vertical
             return new Point( this.start.getX(), point.getY() );
         }
         else {
-            if ( maybeSlope.get() == 0 ) {
+            if ( maybeSlope.get() == 0 ) { // Horizontal
+                if ( point.getX() <= this.start.getX() ) {
+                    return new Point( this.start.getX(), this.start.getY() );
+                }
+                else if ( point.getX() >= this.end.getX() ) {
+                    return new Point( this.end.getX(), this.end.getY() );
+                }
+
                 return new Point( point.getX(), this.start.getY() );
             }
 
@@ -74,6 +81,11 @@ public abstract class Line
         }
 
         return Optional.of( ( this.end.getY() - this.start.getY() ) / ( this.end.getX() - this.start.getX() ) );
+    }
+
+    @Override
+    public String toString() {
+        return "Line{" + "start=" + start + ", end=" + end + '}';
     }
 
     protected static class Builder
