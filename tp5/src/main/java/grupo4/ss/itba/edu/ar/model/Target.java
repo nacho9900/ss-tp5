@@ -25,7 +25,7 @@ public class Target extends Line
     }
 
     public boolean reached( Particle particle ) {
-        return particle.getPosition().getY() - particle.getRadius() + 1e-1 <= this.end.getY();
+        return particle.getPosition().getY() <= this.end.getY();
     }
 
     public static Builder builder() {

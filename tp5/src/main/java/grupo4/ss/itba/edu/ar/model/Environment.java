@@ -59,20 +59,28 @@ public class Environment
         }
     }
 
-    public void printToFile() {
+    public void printToFile( double dt ) {
         printStatic();
-        printParticles();
+        printParticles( dt );
     }
 
-    private void printParticles() {
+    private void printParticles( double dt ) {
         String particlesName = "particles.xyz";
         StringBuilder builder = new StringBuilder();
+        double accumulator = 0;
+        boolean first = true;
         try ( BufferedWriter writer = new BufferedWriter( new FileWriter( particlesName ) ) ) {
             for ( EnvironmentState state : this.states ) {
-                builder.setLength( 0 );
-                state.appendToStringBuilder( builder );
-                writer.write( builder.toString() );
-                writer.flush();
+                if ( first || accumulator > dt ) {
+                    builder.setLength( 0 );
+                    state.appendToStringBuilder( builder );
+                    writer.write( builder.toString() );
+                    writer.flush();
+                    first = false;
+                }
+                else {
+                    accumulator += this.dt;
+                }
             }
         }
         catch ( IOException e ) {

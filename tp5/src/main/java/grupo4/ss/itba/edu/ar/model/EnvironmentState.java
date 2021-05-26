@@ -1,11 +1,14 @@
 package grupo4.ss.itba.edu.ar.model;
 
+import lombok.Getter;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class EnvironmentState
 {
     private final List<Particle> particles;
+    @Getter
     private final double time;
 
     private EnvironmentState(Builder builder) {
