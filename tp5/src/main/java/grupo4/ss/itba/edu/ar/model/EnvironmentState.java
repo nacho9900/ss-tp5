@@ -21,6 +21,14 @@ public class EnvironmentState
         particles.forEach( x -> x.appendToStringBuilder( stringBuilder ) );
     }
 
+    public void appendToStringBuilderAmountAndTime(StringBuilder stringBuilder) {
+        stringBuilder
+            .append( time )
+            .append( " " )
+            .append( particles.size() )
+            .append( System.lineSeparator() );
+    }
+
     public static Builder builder() {
         return new Builder();
     }

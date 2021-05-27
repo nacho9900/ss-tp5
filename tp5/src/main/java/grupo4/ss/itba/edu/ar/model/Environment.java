@@ -64,6 +64,20 @@ public class Environment
         printParticles( dt );
     }
 
+    public void printToFileParticlesOverTime(StringBuilder builder, String fileName) {
+        try ( BufferedWriter writer = new BufferedWriter( new FileWriter( fileName ) ) ) {
+            for ( EnvironmentState state : this.states ) {
+                builder.setLength( 0 );
+                state.appendToStringBuilderAmountAndTime( builder );
+                writer.write( builder.toString() );
+                writer.flush();
+            }
+        }
+        catch ( IOException e ) {
+            e.printStackTrace();
+        }
+    }
+
     private void printParticles( double dt ) {
         String particlesName = "particles.xyz";
         StringBuilder builder = new StringBuilder();
