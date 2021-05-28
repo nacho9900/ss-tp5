@@ -21,6 +21,9 @@ public class Environment
     private List<Particle> particles;
     private final double dt;
 
+    // ej_a
+    private List<Double> dischargeTimes = new LinkedList<>();
+
     private Environment( Builder builder ) {
         this.walls = builder.walls;
         this.target1 = builder.target1;
@@ -48,6 +51,9 @@ public class Environment
                         particle.setTarget( this.target2 );
                     }
                     particles.add( particle );
+                } else {
+                    // ej_a
+                    this.dischargeTimes.add(i * this.dt);
                 }
             }
 
@@ -66,9 +72,10 @@ public class Environment
 
     public void printToFileParticlesOverTime(StringBuilder builder, String fileName) {
         try ( BufferedWriter writer = new BufferedWriter( new FileWriter( fileName ) ) ) {
-            for ( EnvironmentState state : this.states ) {
+            for ( Double dischargeTime : this.dischargeTimes ) {
                 builder.setLength( 0 );
-                state.appendToStringBuilderAmountAndTime( builder );
+                builder.append( dischargeTime )
+                        .append( System.lineSeparator() );
                 writer.write( builder.toString() );
                 writer.flush();
             }
