@@ -15,7 +15,7 @@ def avg(l):
     return sum(l)/len(l)
 
 # Set up data - find average amounts for each timestep (very inefficient, I don't care)
-granularity = 50  # 100 points per second
+granularity = 50  # 50 points per second
 times = [i/granularity for i in range(1000 * granularity)]
 amounts_avg = []
 for time in times:
@@ -30,30 +30,24 @@ for time in times:
     else:
         times = times[:len(amounts_avg)]
         break
-# caudal = [(amounts_avg[x] - amounts_avg[x-interval]) / (x - (x-interval))*1000 for x in range(len(amounts_avg))]
-# caudal = caudal[interval:]
-# times = times[interval:]
-# amounts_avg = amounts_avg[interval:]
-x2 = int(0.21 * len(amounts_avg))#70 * granularity
-x1 = int(0.2 * len(amounts_avg))#50 * granularity
-print((amounts_avg[x2] - amounts_avg[x1]) / (x2 - x1) * granularity)
-# y = x + 14.08
 
+x2 = int(0.7 * len(amounts_avg))
+x1 = int(0.2 * len(amounts_avg))
+print('Caudal (pendiente estable):', (amounts_avg[x2] - amounts_avg[x1]) / (x2 - x1) * granularity)
 
-# Set up graph
-fig = plt.figure(figsize=(15,10))
-ax1 = fig.add_subplot(111)
-ax1.set_xlabel('Tiempo (s)', fontsize=27)
-ax1.set_ylabel('Particulas que escaparon', fontsize=27)
-ax1.tick_params(axis='both', which='major', labelsize=20, width=2.5, length=10)
-ax1.errorbar(times, amounts_avg)
-# ax1.errorbar(times, caudal)
-# ax1.set_aspect( 1 )
-# plt.xlim([0, 6])
-# plt.ylim([0, 6])
-fig1=plt.gcf()
+# Descomentar todo lo de abajo para ver la pendiente
+# fig = plt.figure(figsize=(15,10))
+# ax1 = fig.add_subplot(111)
+# ax1.set_xlabel('Tiempo (s)', fontsize=27)
+# ax1.set_ylabel('Particulas que escaparon', fontsize=27)
+# ax1.tick_params(axis='both', which='major', labelsize=20, width=2.5, length=10)
+# ax1.errorbar(times, amounts_avg)
+# # ax1.set_aspect( 1 )
+# # plt.xlim([0, 6])
+# # plt.ylim([0, 6])
+# fig1=plt.gcf()
 
-if savefile_name != '':
-    plt.savefig(savefile_name)
-else:
-    plt.show()
+# if savefile_name != '':
+#     plt.savefig(savefile_name)
+# else:
+#     plt.show()
