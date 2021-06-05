@@ -39,7 +39,9 @@ public class Environment
     public void run() {
         int i = 0;
         while ( !this.particles.isEmpty() && i < 60000 ) {
-            System.out.printf( "{i: %d; q: %d }%n", i, this.particles.size() );
+            if (i % 1000 == 0) {
+                System.out.printf( "{i: %d; q: %d }%n", i, this.particles.size() );
+            }
             i++;
             this.particles.forEach( x -> x.setForceAndAcceleration( this.particles, this.walls ) );
             List<Particle> particles = new LinkedList<>();
@@ -47,13 +49,13 @@ public class Environment
             for ( Particle particle : this.particles ) {
                 particle.move( this.dt );
                 if ( !target2.reached( particle ) ) {
-                    if ( target1.reached( particle ) ) {
+                    if ( target1.reached( particle ) && particle.getTarget().equals(target1) ) {
                         particle.setTarget( this.target2 );
+                        // ej_a
+                        this.dischargeTimes.add(i * this.dt);
+                    } else {
                     }
                     particles.add( particle );
-                } else {
-                    // ej_a
-                    this.dischargeTimes.add(i * this.dt);
                 }
             }
 
