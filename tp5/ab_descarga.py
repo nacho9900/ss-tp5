@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 from statistics import stdev
 
 savefile_name = ''  # if name is empty, script will show and not save the graph
-# savefile_name = 'ej_a/particlesOverTime_100.png'
+# savefile_name = 'ej_a/particlesOverTime_100_descarga.png'
 list_of_times = []
 for i in range(100):
     with open(f'ej_a/particlesOverTime_N_200_opening_1_2_dt_1e-2_seed_{i}.csv') as f:
