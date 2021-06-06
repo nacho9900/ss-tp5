@@ -4,16 +4,10 @@ public class VerletMovementOperator implements ParticleMovementOperator
 {
     @Override
     public void move( Particle particle, double dt, double maxSpeed ) {
-        particle.getStates()
-                .add( ParticleState.builder()
-                                   .withParticle( particle )
-                                   .build() );
-        Vector prevPositionVector = particle.getStates()
-                                            .get( particle.getStates()
-                                                          .size() - 2 )
-                                            .getParticle()
+        Vector prevPositionVector = particle.getPreviousState()
                                             .getPosition()
                                             .asVector();
+        particle.setPreviousState( particle.getCopy() );
         Vector positionVector = Vector.sum( Vector.minus( Vector.multiply( particle.getPosition()
                                                                                    .asVector(), 2 ),
                                                           prevPositionVector ),
@@ -21,7 +15,7 @@ public class VerletMovementOperator implements ParticleMovementOperator
         particle.setPosition( new Point( positionVector.getX(), positionVector.getY() ) );
         Vector velocity = Vector.multiply( Vector.minus( positionVector, prevPositionVector ), 1 / ( 2 * dt ) );
 
-        if(velocity.getLength() > maxSpeed) {
+        if ( velocity.getLength() > maxSpeed ) {
             velocity = Vector.multiply( velocity.getUnitVector(), maxSpeed );
         }
 

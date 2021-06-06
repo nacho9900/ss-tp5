@@ -16,8 +16,6 @@ public class Particle
     private final double radius;
     private final double desiredSpeed;
     @Getter
-    private final List<ParticleState> states;
-    @Getter
     @Setter
     private Point position;
     @Getter
@@ -29,8 +27,9 @@ public class Particle
     @Getter
     @Setter
     private Target target;
-    private final EulerMethodOperator eulerMethodOperator;
-    private final VerletMovementOperator verletMovementOperator;
+    @Getter
+    @Setter
+    private Particle previousState;
 
     /**
      * constants from paper "Simulating dynamical features of escape panic" A = 2x10³N B = 0.08m accelerationTime =
@@ -41,6 +40,8 @@ public class Particle
     private static final double accelerationTime = 0.5;
     private static final double kn = 1.2e5;
     private static final double kt = 2.4e5;
+    private static final EulerMethodOperator eulerMethodOperator = new EulerMethodOperator();
+    private static final VerletMovementOperator verletMovementOperator = new VerletMovementOperator();
 
     private Particle( ParticleBuilder builder ) {
         this.id = builder.id;
@@ -50,17 +51,15 @@ public class Particle
         this.mass = builder.mass;
         this.radius = builder.radius;
         this.desiredSpeed = builder.desiredSpeed;
-        this.states = new LinkedList<>();
-        this.eulerMethodOperator = new EulerMethodOperator();
-        this.verletMovementOperator = new VerletMovementOperator();
+        this.previousState = null;
     }
 
     public void move( double dt ) {
-        if ( states.isEmpty() ) {
-            this.move( eulerMethodOperator, dt );
+        if ( previousState == null ) {
+            this.move( Particle.eulerMethodOperator, dt );
         }
         else {
-            this.move( verletMovementOperator, dt );
+            this.move( Particle.verletMovementOperator, dt );
         }
     }
 
@@ -170,15 +169,25 @@ public class Particle
     }
 
     /* package */ Particle getCopy() {
-        return Particle.builder()
-                       .withId( this.id )
-                       .withMass( this.mass )
-                       .withPosition( this.position.getX(), this.position.getY() )
-                       .withVelocity( this.velocity.getX(), this.velocity.getY() )
-                       .withTarget( this.target )
-                       .withDesiredSpeed( this.desiredSpeed )
-                       .withRadius( this.radius )
-                       .build();
+        Particle particle = Particle.builder()
+                                    .withId( this.id )
+                                    .withMass( this.mass )
+                                    .withPosition( this.position.getX(), this.position.getY() )
+                                    .withVelocity( this.velocity.getX(), this.velocity.getY() )
+                                    .withTarget( this.target )
+                                    .withDesiredSpeed( this.desiredSpeed )
+                                    .withRadius( this.radius )
+                                    .build();
+
+        if ( this.acceleration != null ) {
+            particle.acceleration = new Vector( this.acceleration.getX(), this.acceleration.getY() );
+        }
+
+        if ( this.force != null ) {
+            particle.force = new Vector( this.force.getX(), this.force.getY() );
+        }
+
+        return particle;
     }
 
     public void appendToStringBuilder( StringBuilder stringBuilder ) {
@@ -187,10 +196,6 @@ public class Particle
                      .append( this.position.getY() )
                      .append( " " )
                      .append( this.radius )
-                     .append( " " )
-                     .append( this.velocity.getX() )
-                     .append( " " )
-                     .append( this.velocity.getY() )
                      .append( " " )
                      .append( this.velocity.getLength() / this.desiredSpeed ) //R
                      .append( " " )

@@ -4,10 +4,7 @@ public class EulerMethodOperator implements ParticleMovementOperator
 {
     @Override
     public void move( Particle particle, double dt, double maxSpeed ) {
-        particle.getStates()
-                .add( ParticleState.builder()
-                                   .withParticle( particle )
-                                   .build() );
+        particle.setPreviousState( particle.getCopy() );
         Vector velocity = Vector.sum( particle.getVelocity(), Vector.multiply( particle.getAcceleration(), dt ) );
         if(velocity.getLength() > maxSpeed) {
             velocity = Vector.multiply( velocity.getUnitVector(), maxSpeed );

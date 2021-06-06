@@ -20,9 +20,10 @@ public class Environment
     private final List<EnvironmentState> states = new LinkedList<>();
     private List<Particle> particles;
     private final double dt;
+    private final double dt2;
 
     // ej_a
-    private List<Double> dischargeTimes = new LinkedList<>();
+    private final List<Double> dischargeTimes = new LinkedList<>();
 
     private Environment( Builder builder ) {
         this.walls = builder.walls;
@@ -30,6 +31,7 @@ public class Environment
         this.target2 = builder.target2;
         this.particles = builder.particles;
         this.dt = builder.dt;
+        this.dt2 = builder.dt2;
         this.states.add( EnvironmentState.builder()
                                          .withParticles( this.particles )
                                          .withTime( 0 )
@@ -37,47 +39,60 @@ public class Environment
     }
 
     public void run() {
+        double timeAccumulator = 0;
         int i = 0;
-        while ( !this.particles.isEmpty() && i < 60000 ) {
-            if (i % 1000 == 0) {
+        while ( !this.particles.isEmpty() ) {
+            if ( i % 10000 == 0 ) {
                 System.out.printf( "{i: %d; q: %d }%n", i, this.particles.size() );
             }
-            i++;
-            this.particles.forEach( x -> x.setForceAndAcceleration( this.particles, this.walls ) );
-            List<Particle> particles = new LinkedList<>();
 
-            for ( Particle particle : this.particles ) {
-                particle.move( this.dt );
-                if ( !target2.reached( particle ) ) {
-                    if ( target1.reached( particle ) && particle.getTarget().equals(target1) ) {
-                        particle.setTarget( this.target2 );
+            i++;
+            List<Particle> particles = new LinkedList<>();
+            final double currentTime = i * this.dt;
+
+            this.particles.forEach( x -> {
+                x.setForceAndAcceleration( this.particles, this.walls );
+                Particle aux = x.getCopy();
+                aux.move( this.dt );
+                if ( !target2.reached( aux ) ) {
+                    if ( target1.reached( aux ) && aux.getTarget()
+                                                                .equals( target1 ) ) {
+                        aux.setTarget( this.target2 );
                         // ej_a
-                        this.dischargeTimes.add(i * this.dt);
-                    } else {
+                        this.dischargeTimes.add( currentTime );
                     }
-                    particles.add( particle );
+
+                    particles.add( aux );
+                }
+            } );
+
+            if ( timeAccumulator >= this.dt2 || i == 1 ) {
+                this.states.add( EnvironmentState.builder()
+                                                 .withParticles( this.particles )
+                                                 .withTime( currentTime )
+                                                 .build() );
+
+                if ( timeAccumulator >= this.dt2 ) {
+                    timeAccumulator = 0;
                 }
             }
 
-            this.states.add( EnvironmentState.builder()
-                                             .withParticles( this.particles )
-                                             .withTime( i * dt )
-                                             .build() );
+            timeAccumulator += this.dt;
             this.particles = particles;
         }
     }
 
-    public void printToFile( double dt ) {
+    public void printToFile() {
         printStatic();
-        printParticles( dt );
+        printParticles();
     }
 
-    public void printToFileParticlesOverTime(StringBuilder builder, String fileName) {
+    public void printToFileParticlesOverTime( StringBuilder builder, String fileName ) {
         try ( BufferedWriter writer = new BufferedWriter( new FileWriter( fileName ) ) ) {
             for ( Double dischargeTime : this.dischargeTimes ) {
                 builder.setLength( 0 );
                 builder.append( dischargeTime )
-                        .append( System.lineSeparator() );
+                       .append( System.lineSeparator() );
                 writer.write( builder.toString() );
                 writer.flush();
             }
@@ -87,23 +102,15 @@ public class Environment
         }
     }
 
-    private void printParticles( double dt ) {
+    private void printParticles() {
         String particlesName = "particles.xyz";
         StringBuilder builder = new StringBuilder();
-        double accumulator = 0;
-        boolean first = true;
         try ( BufferedWriter writer = new BufferedWriter( new FileWriter( particlesName ) ) ) {
             for ( EnvironmentState state : this.states ) {
-                if ( first || accumulator > dt ) {
-                    builder.setLength( 0 );
-                    state.appendToStringBuilder( builder );
-                    writer.write( builder.toString() );
-                    writer.flush();
-                    first = false;
-                }
-                else {
-                    accumulator += this.dt;
-                }
+                builder.setLength( 0 );
+                state.appendToStringBuilder( builder );
+                writer.write( builder.toString() );
+                writer.flush();
             }
         }
         catch ( IOException e ) {
@@ -145,6 +152,7 @@ public class Environment
         private Target target1;
         private Target target2;
         private double dt;
+        private double dt2;
 
         private Builder() {
             this.walls = new LinkedList<>();
@@ -243,6 +251,11 @@ public class Environment
 
         public Builder withDt( double dt ) {
             this.dt = dt;
+            return this;
+        }
+
+        public Builder withDt2( double dt2 ) {
+            this.dt2 = dt2;
             return this;
         }
 
