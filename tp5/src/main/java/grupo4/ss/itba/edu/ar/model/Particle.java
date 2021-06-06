@@ -190,6 +190,10 @@ public class Particle
         return particle;
     }
 
+    public double getArea() {
+        return Math.PI * Math.pow( this.radius, 2 );
+    }
+
     public void appendToStringBuilder( StringBuilder stringBuilder ) {
         stringBuilder.append( this.position.getX() )
                      .append( " " )

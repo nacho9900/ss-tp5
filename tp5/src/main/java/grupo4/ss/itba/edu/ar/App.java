@@ -23,11 +23,12 @@ public class App
                                              .withSeed( 94 )
                                              .withOpening( 1.6 )
                                              .withParticlesQuantity( 200 )
-                                             .withDt( 1e-4 )
+                                             .withDt( 1e-2 )
                                              .withDt2( 1e-2 )
                                              .build();
         environment.run();
         environment.printToFile();
+        environment.printDensityOverTime();
     }
 
     public static void a() {

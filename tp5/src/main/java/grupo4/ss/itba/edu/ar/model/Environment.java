@@ -21,9 +21,11 @@ public class Environment
     private List<Particle> particles;
     private final double dt;
     private final double dt2;
+    private double area;
 
     // ej_a
     private final List<Double> dischargeTimes = new LinkedList<>();
+    private final List<Double> densityOverTime = new LinkedList<>();
 
     private Environment( Builder builder ) {
         this.walls = builder.walls;
@@ -36,6 +38,9 @@ public class Environment
                                          .withParticles( this.particles )
                                          .withTime( 0 )
                                          .build() );
+        this.area = this.particles.stream()
+                                  .mapToDouble( Particle::getArea )
+                                  .sum();
     }
 
     public void run() {
@@ -50,27 +55,57 @@ public class Environment
             List<Particle> particles = new LinkedList<>();
             final double currentTime = i * this.dt;
 
-            this.particles.forEach( x -> {
+            double rightestX = 0;
+            double leftestX = 20;
+            double topmostY = 0;
+            int count = 0;
+
+            for ( Particle x : this.particles ) {
                 x.setForceAndAcceleration( this.particles, this.walls );
                 Particle aux = x.getCopy();
                 aux.move( this.dt );
                 if ( !target2.reached( aux ) ) {
-                    if ( target1.reached( aux ) && aux.getTarget()
-                                                                .equals( target1 ) ) {
-                        aux.setTarget( this.target2 );
-                        // ej_a
-                        this.dischargeTimes.add( currentTime );
+                    if ( aux.getTarget()
+                            .equals( target1 ) ) {
+
+                        if ( target1.reached( aux ) ) {
+                            aux.setTarget( this.target2 );
+                            // ej_a
+                            this.dischargeTimes.add( currentTime );
+                            this.area -= aux.getArea();
+                        }
+                        else {
+                            Point position = aux.getPosition();
+                            double radius = aux.getRadius();
+                            count++;
+
+                            if ( position.getX() + radius > rightestX ) {
+                                rightestX = position.getX() + radius;
+                            }
+
+                            if ( position.getX() - radius < leftestX ) {
+                                leftestX = position.getX() - radius;
+                            }
+
+                            if ( position.getY() + radius > topmostY ) {
+                                topmostY = position.getY() + radius;
+                            }
+                        }
                     }
 
                     particles.add( aux );
                 }
-            } );
+            }
 
             if ( timeAccumulator >= this.dt2 || i == 1 ) {
                 this.states.add( EnvironmentState.builder()
                                                  .withParticles( this.particles )
                                                  .withTime( currentTime )
                                                  .build() );
+
+                if ( count > 1 ) {
+                    this.densityOverTime.add( this.area / ( topmostY * ( rightestX - leftestX ) ) );
+                }
 
                 if ( timeAccumulator >= this.dt2 ) {
                     timeAccumulator = 0;
@@ -79,6 +114,20 @@ public class Environment
 
             timeAccumulator += this.dt;
             this.particles = particles;
+        }
+    }
+
+    public void printDensityOverTime() {
+        String staticFilename = "density.csv";
+
+        try ( BufferedWriter writer = new BufferedWriter( new FileWriter( staticFilename ) ) ) {
+            StringBuilder builder = new StringBuilder();
+            this.densityOverTime.forEach( x -> builder.append( x )
+                                                      .append( System.lineSeparator() ) );
+            writer.write( builder.toString() );
+        }
+        catch ( IOException e ) {
+            e.printStackTrace();
         }
     }
 
