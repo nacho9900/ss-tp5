@@ -21,8 +21,8 @@ public class App
     public static void defaultRun() {
         Environment environment = Environment.builder()
                                              .withSeed( 94 )
-                                             .withOpening( 1.6 )
-                                             .withParticlesQuantity( 200 )
+                                             .withOpening( 3 )
+                                             .withParticlesQuantity( 380 )
                                              .withDt( 1e-2 )
                                              .withDt2( 1e-2 )
                                              .build();

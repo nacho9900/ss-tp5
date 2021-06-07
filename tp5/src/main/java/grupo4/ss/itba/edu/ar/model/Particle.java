@@ -201,9 +201,9 @@ public class Particle
                      .append( " " )
                      .append( this.radius )
                      .append( " " )
-                     .append( this.velocity.getLength() / this.desiredSpeed ) //R
+                     .append( ( this.force == null ? 0 : this.force.getLength() ) / 500 ) //R
                      .append( " " )
-                     .append( 1.0 - ( this.velocity.getLength() / this.desiredSpeed ) ) //G
+                     .append( 1.0 - ( ( this.force == null ? 0 : this.force.getLength() ) / 500 ) ) //G
                      .append( " " )
                      .append( "0" )
                      .append( System.lineSeparator() );
