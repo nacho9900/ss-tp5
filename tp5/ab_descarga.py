@@ -1,11 +1,16 @@
 import matplotlib.pyplot as plt
 from statistics import stdev
 
+def d_string(d):
+    return str(d).replace('.', '_')
+
 savefile_name = ''  # if name is empty, script will show and not save the graph
 # savefile_name = 'ej_a/particlesOverTime_100_descarga.png'
 list_of_times = []
+N, d = 200, 1.2
 for i in range(10):
-    with open(f'ej_a/particlesOverTime_N_200_opening_1_2_dt_1e-2_seed_{i}.csv') as f:
+    # with open(f'ej_a/particlesOverTime_N_200_opening_1_2_dt_1e-2_seed_{i}.csv') as f:
+    with open(f'ej_c/flowPerOpening_N_{N}_opening_{d_string(d)}_dt_1e-4_seed_{i}.csv') as f:
         lines = f.readlines()
         list_of_times.append([float(line.split(' ')[0]) for line in lines])
 
@@ -15,7 +20,7 @@ def avg(l):
     return sum(l)/len(l)
 
 # Set up data
-x = [i for i in range(200)]
+x = [i for i in range(N)]
 y = [avg(times) for times in zip(*list_of_times)]
 y_err = [stdev(times) for times in zip(*list_of_times)]
 
