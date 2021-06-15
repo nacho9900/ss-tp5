@@ -201,11 +201,13 @@ public class Particle
                      .append( " " )
                      .append( this.radius )
                      .append( " " )
-                     .append( ( this.force == null ? 0 : this.force.getLength() ) / 500 ) //R
+                     .append( this.target.getClosestPoint( this.getPosition() )
+                                         .getY() > 10 ? 1 : 0 ) //R
                      .append( " " )
-                     .append( 1.0 - ( ( this.force == null ? 0 : this.force.getLength() ) / 500 ) ) //G
+                     .append( 0 ) //G
                      .append( " " )
-                     .append( "0" )
+                     .append( this.target.getClosestPoint( this.getPosition() )
+                                         .getY() > 10 ? 0 : 1 )
                      .append( System.lineSeparator() );
     }
 

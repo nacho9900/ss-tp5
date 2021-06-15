@@ -24,8 +24,12 @@ public class Target extends Line
         return new Point( point.getX(), this.start.getY() );
     }
 
-    public boolean reached( Particle particle ) {
+    public boolean reachedBelow( Particle particle ) {
         return particle.getPosition().getY() <= this.end.getY();
+    }
+
+    public boolean reachedUpper( Particle particle ) {
+        return particle.getPosition().getY() >= this.end.getY();
     }
 
     public static Builder builder() {

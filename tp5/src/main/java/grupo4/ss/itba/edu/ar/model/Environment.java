@@ -17,6 +17,8 @@ public class Environment
     private final List<Wall> walls;
     private final Target target1;
     private final Target target2;
+    private final Target target3;
+    private final Target target4;
     private final List<EnvironmentState> states = new LinkedList<>();
     private List<Particle> particles;
     private final double dt;
@@ -31,6 +33,8 @@ public class Environment
         this.walls = builder.walls;
         this.target1 = builder.target1;
         this.target2 = builder.target2;
+        this.target3 = builder.target3;
+        this.target4 = builder.target4;
         this.particles = builder.particles;
         this.dt = builder.dt;
         this.dt2 = builder.dt2;
@@ -47,7 +51,7 @@ public class Environment
         double timeAccumulator = 0;
         int i = 0;
         while ( !this.particles.isEmpty() ) {
-            if ( i % 10000 == 0 ) {
+            if ( i % 1000 == 0 ) {
                 System.out.printf( "{i: %d; q: %d }%n", i, this.particles.size() );
             }
 
@@ -64,12 +68,38 @@ public class Environment
                 x.setForceAndAcceleration( this.particles, this.walls );
                 Particle aux = x.getCopy();
                 aux.move( this.dt );
-                if ( !target2.reached( aux ) ) {
+                if ( !target2.reachedBelow( aux ) && !target4.reachedUpper( aux ) ) {
                     if ( aux.getTarget()
                             .equals( target1 ) ) {
-
-                        if ( target1.reached( aux ) ) {
+                        if ( target1.reachedBelow( aux ) ) {
                             aux.setTarget( this.target2 );
+                            // ej_a
+                            this.dischargeTimes.add( currentTime );
+                            this.area -= aux.getArea();
+                        }
+                        else {
+                            Point position = aux.getPosition();
+                            double radius = aux.getRadius();
+                            count++;
+
+                            if ( position.getX() + radius > rightestX ) {
+                                rightestX = position.getX() + radius;
+                            }
+
+                            if ( position.getX() - radius < leftestX ) {
+                                leftestX = position.getX() - radius;
+                            }
+
+                            if ( position.getY() + radius > topmostY ) {
+                                topmostY = position.getY() + radius;
+                            }
+                        }
+                    }
+
+                    if ( aux.getTarget()
+                            .equals( target3 ) ) {
+                        if ( target3.reachedBelow( aux ) ) {
+                            aux.setTarget( this.target4 );
                             // ej_a
                             this.dischargeTimes.add( currentTime );
                             this.area -= aux.getArea();
@@ -180,6 +210,8 @@ public class Environment
 
             quantity += target1.appendToStringBuilder( builder, OutputColor.Red );
             quantity += target2.appendToStringBuilder( builder, OutputColor.Red );
+            quantity += target3.appendToStringBuilder( builder, OutputColor.Red );
+            quantity += target4.appendToStringBuilder( builder, OutputColor.Red );
 
             writer.write( quantity + System.lineSeparator() + System.lineSeparator() + builder );
             writer.flush();
@@ -200,6 +232,8 @@ public class Environment
         private Optional<Integer> seed;
         private Target target1;
         private Target target2;
+        private Target target3;
+        private Target target4;
         private double dt;
         private double dt2;
 
@@ -210,16 +244,11 @@ public class Environment
                                       .withStart( 0, 0 )
                                       .withEnd( 0, 20 )
                                       .build();
-            final Wall upperWall = Wall.builder()
-                                       .withStart( 0, 20 )
-                                       .withEnd( 20, 20 )
-                                       .build();
             final Wall rightWall = Wall.builder()
                                        .withStart( 20, 0 )
                                        .withEnd( 20, 20 )
                                        .build();
             this.walls.add( leftWall );
-            this.walls.add( upperWall );
             this.walls.add( rightWall );
             this.seed = Optional.empty();
             this.particles = new LinkedList<>();
@@ -243,6 +272,17 @@ public class Environment
                                              .build();
             this.walls.add( bottomLeftWall );
             this.walls.add( bottomRightWall );
+
+            final Wall topLeftWall = Wall.builder()
+                                         .withStart( 0, 20 )
+                                         .withEnd( 10 - ( opening / 2.0 ), 20 )
+                                         .build();
+            final Wall topRightWall = Wall.builder()
+                                          .withStart( 10 + ( opening / 2.0 ), 20 )
+                                          .withEnd( 20, 20 )
+                                          .build();
+            this.walls.add( topLeftWall );
+            this.walls.add( topRightWall );
         }
 
         private void buildTargets( double opening ) {
@@ -253,6 +293,15 @@ public class Environment
             this.target2 = Target.builder()
                                  .withStart( 8.5, -10 )
                                  .withEnd( 11.5, -10 )
+                                 .build();
+
+            this.target3 = Target.builder()
+                                 .withStart( 10 - ( opening / 2.0 ) + 0.1, 20 )
+                                 .withEnd( 10 + ( opening / 2.0 ) - 0.1, 20 )
+                                 .build();
+            this.target4 = Target.builder()
+                                 .withStart( 8.5, 30 )
+                                 .withEnd( 11.5, 30 )
                                  .build();
         }
 
@@ -275,7 +324,7 @@ public class Environment
                                             .withMass( 80 )
                                             .withRadius( radius )
                                             .withDesiredSpeed( 2 )
-                                            .withTarget( this.target1 )
+                                            .withTarget( y > 10 ? this.target1 : this.target3 )
                                             .withPosition( x, y )
                                             .withVelocity( 0, 0 )
                                             .build();
@@ -285,6 +334,7 @@ public class Environment
                     x = MathHelper.randBetween( random, 0 + radius, 20 - radius );
                     y = MathHelper.randBetween( random, 0 + radius, 20 - radius );
                     particle.setPosition( new Point( x, y ) );
+                    particle.setTarget( y > 10 ? this.target1 : this.target3 );
                 }
 
                 this.particles.add( particle );

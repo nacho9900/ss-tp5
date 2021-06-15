@@ -21,14 +21,14 @@ public class App
     public static void defaultRun() {
         Environment environment = Environment.builder()
                                              .withSeed( 94 )
-                                             .withOpening( 3 )
-                                             .withParticlesQuantity( 380 )
+                                             .withOpening( 10 )
+                                             .withParticlesQuantity( 400 )
                                              .withDt( 1e-2 )
                                              .withDt2( 1e-2 )
                                              .build();
         environment.run();
         environment.printToFile();
-        environment.printDensityOverTime();
+        //        environment.printDensityOverTime();
     }
 
     public static void a() {
