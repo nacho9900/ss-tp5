@@ -32,6 +32,11 @@ public class Target extends Line
         return particle.getPosition().getY() >= this.end.getY();
     }
 
+    public boolean reached( Particle particle ) {
+        //TODO: adjust reached distance
+        return Math.sqrt( Math.pow( this.start.getY() - particle.getPosition().getY(), 2 ) + Math.pow( this.start.getX() - particle.getPosition().getX(), 2 ) ) < particle.getRadius()*5;
+    }
+
     public static Builder builder() {
         return new Builder();
     }
