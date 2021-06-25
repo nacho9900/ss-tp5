@@ -6,8 +6,10 @@ import grupo4.ss.itba.edu.ar.utils.OutputColor;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
@@ -20,7 +22,20 @@ public class Environment
     private final double dt;
     private final double dt2;
     private double area;
+
+    // New for TP Final
     private Random random;
+    public static double infectionProbability;
+    public static double sneezeRadius;
+    
+    /* 
+     * Infection probabilities
+     * For implementation see Particle.sneezeOn method
+     */
+    // 0.0 means it doesn't infect, 1.0 means it infect with the global 'infectionProbability', higher values means its a super spreader
+    public static Map<InfectedState, Double> infectionProbabilityPerState;
+    // 0.0 means it is inmune to any sneeze, 1.0 means it has no defenses, higher values means it is a higher risk individual
+    public static Map<InfectedState, Double> defensesProbabilityPerState;
 
     // ej_a
     private final List<Double> dischargeTimes = new LinkedList<>();
@@ -39,6 +54,10 @@ public class Environment
                                   .mapToDouble( Particle::getArea )
                                   .sum();
         this.random = builder.random;
+        Environment.infectionProbability = builder.infectionProbability;
+        Environment.sneezeRadius = builder.sneezeRadius;
+        Environment.infectionProbabilityPerState = builder.infectionProbabilityPerState;
+        Environment.defensesProbabilityPerState = builder.defensesProbabilityPerState;
     }
 
     public void run() {
@@ -64,8 +83,12 @@ public class Environment
                 Target auxTarget = aux.getTarget();
                 aux.move( this.dt );
                 for (Particle aux2 : particles) {
-                    aux.sneezeOn(random, aux2);
-                    aux2.sneezeOn(random, aux);
+                    if (aux.isSick() && !aux2.isSick()) {
+                        aux.sneezeOn(random, aux2);
+                    }
+                    if (!aux.isSick() && aux2.isSick()) {
+                        aux2.sneezeOn(random, aux);
+                    }
                 }
                 if ( !auxTarget.reached(aux) ) {
                     Point position = aux.getPosition();
@@ -201,6 +224,10 @@ public class Environment
         private double dt;
         private double dt2;
         private Random random;
+        private double infectionProbability;
+        private double sneezeRadius;
+        private Map<InfectedState, Double> infectionProbabilityPerState;
+        private Map<InfectedState, Double> defensesProbabilityPerState;
 
         private Builder() {
             this.walls = new LinkedList<>();
@@ -237,7 +264,7 @@ public class Environment
             return this;
         }
 
-        public Builder withParticlesQuantity( int quantity ) {
+        public Builder withParticlesQuantityAndInfectedDistribution( int quantity, Map<InfectedState, Double> infectedDistribution ) throws Exception {
             if (this.random != null) {
                 this.random = seed.map( Random::new )
                                     .orElseGet( Random::new );
@@ -254,7 +281,20 @@ public class Environment
                         .withStart( targetX, targetY )
                         .withEnd( targetX+1, targetY ) // TODO: remove +1 if possible
                         .build();
-                ContagionState contagionState = random.nextDouble() < 0.1 ? ContagionState.SICK_SNEEZES : ContagionState.HEALTHY;
+                InfectedState infectedState = null;
+                double infectionStateChoice = random.nextDouble();
+                double currWeight = 0.0;
+                for (InfectedState _infectedState : infectedDistribution.keySet()) {
+                    double weight = infectedDistribution.get( _infectedState );
+                    currWeight += weight;
+                    if ( currWeight >= infectionStateChoice ) {
+                        infectedState = _infectedState;
+                        break;
+                    }
+                }
+                if (infectedState == null) {
+                    throw new Exception("Infected distribution does not sum 1.0");
+                }
                 Particle particle = Particle.builder()
                                             .withId( UUID.randomUUID() )
                                             .withMass( 80 )
@@ -263,7 +303,7 @@ public class Environment
                                             .withTarget( target )
                                             .withPosition( x, y )
                                             .withVelocity( 0, 0 )
-                                            .withContagionState( contagionState )
+                                            .withInfectedState( infectedState )
                                             .build();
 
                 while ( !notOverlap( particle ) ) //TODO: Condicion de corte
@@ -277,6 +317,23 @@ public class Environment
                 this.particles.add( particle );
             }
 
+            return this;
+        }
+
+        public Builder withInfectionProfile( double probability, double radius, List<Double> infectionProbabilityPerState, List<Double> defensesProbabilityPerState ) {
+            this.infectionProbability = probability;
+            this.sneezeRadius = radius;
+            this.infectionProbabilityPerState = new HashMap<>();
+            this.infectionProbabilityPerState.put(InfectedState.HEALTHY,              infectionProbabilityPerState.get(0));
+            this.infectionProbabilityPerState.put(InfectedState.INFECTED_DONT_SNEEZE, infectionProbabilityPerState.get(1));
+            this.infectionProbabilityPerState.put(InfectedState.INFECTED_SNEEZES,     infectionProbabilityPerState.get(2));
+            this.infectionProbabilityPerState.put(InfectedState.INMUNE,               infectionProbabilityPerState.get(3));
+            
+            this.defensesProbabilityPerState = new HashMap<>();
+            this.defensesProbabilityPerState.put(InfectedState.HEALTHY,              defensesProbabilityPerState.get(0));
+            this.defensesProbabilityPerState.put(InfectedState.INFECTED_DONT_SNEEZE, defensesProbabilityPerState.get(1));
+            this.defensesProbabilityPerState.put(InfectedState.INFECTED_SNEEZES,     defensesProbabilityPerState.get(2));
+            this.defensesProbabilityPerState.put(InfectedState.INMUNE,               defensesProbabilityPerState.get(3));
             return this;
         }
 

@@ -33,7 +33,7 @@ public class Particle
     private Particle previousState;
     @Getter
     @Setter
-    private ContagionState contagionState;
+    private InfectedState infectedState;
 
     /**
      * constants from paper "Simulating dynamical features of escape panic" A = 2x10³N B = 0.08m accelerationTime =
@@ -56,7 +56,7 @@ public class Particle
         this.radius = builder.radius;
         this.desiredSpeed = builder.desiredSpeed;
         this.previousState = null;
-        this.contagionState = builder.contagionState;
+        this.infectedState = builder.infectionState;
     }
 
     public void move( double dt ) {
@@ -182,7 +182,7 @@ public class Particle
                                     .withTarget( this.target )
                                     .withDesiredSpeed( this.desiredSpeed )
                                     .withRadius( this.radius )
-                                    .withContagionState( this.contagionState )
+                                    .withInfectedState( this.infectedState )
                                     .build();
 
         if ( this.acceleration != null ) {
@@ -202,25 +202,28 @@ public class Particle
 
     public void sneezeOn( Random random, Particle p ) {
         double distance = Math.sqrt( Math.pow( position.getY() - p.getPosition().getY(), 2 ) + Math.pow( position.getX() - p.getPosition().getX(), 2 ) );
-        if (distance > 1.0 || // TODO: change 1 for a constant 'R_contagion'
-            contagionState == ContagionState.HEALTHY ||
-            contagionState == ContagionState.HEALTHY_WITH_ANTIBODIES) return;
+        if (distance > Environment.sneezeRadius) return;
 
-        boolean effectiveSneeze = random.nextDouble() < 0.01; // TODO: make this probability vary based on context (to be defined)
+        double probabilityOfGettingInfected = Environment.infectionProbability * 
+                                                Environment.infectionProbabilityPerState.get(infectedState) * 
+                                                Environment.defensesProbabilityPerState.get(p.getInfectedState());
+        // System.out.printf("Prob: (%f * %f * %f) = %f\n",
+        //                     Environment.infectionProbability,
+        //                     Environment.infectionProbabilityPerState.get(p.getInfectedState()),
+        //                     Environment.defensesProbabilityPerState.get(infectedState),
+        //                     probabilityOfGettingInfected);
+        boolean effectiveSneeze = random.nextDouble() < probabilityOfGettingInfected;
         if ( effectiveSneeze ) {
-            ContagionState pState = p.getContagionState();
-            if ( pState == ContagionState.HEALTHY ) {
-                p.setContagionState(ContagionState.SICK_DONT_SNEEZE);
-            }
+            p.setInfectedState(InfectedState.INFECTED_SNEEZES);
         }
     }
 
     public boolean isSick() {
-        return contagionState == ContagionState.SICK_DONT_SNEEZE || contagionState == ContagionState.SICK_SNEEZES;
+        return infectedState == InfectedState.INFECTED_DONT_SNEEZE || infectedState == InfectedState.INFECTED_SNEEZES;
     }
 
     public void appendToStringBuilder( StringBuilder stringBuilder ) {
-        boolean sick = this.getContagionState() == ContagionState.SICK_SNEEZES || this.getContagionState() == ContagionState.SICK_DONT_SNEEZE;
+        boolean sick = this.getInfectedState() == InfectedState.INFECTED_SNEEZES || this.getInfectedState() == InfectedState.INFECTED_DONT_SNEEZE;
         stringBuilder.append( this.position.getX() )
                      .append( " " )
                      .append( this.position.getY() )
@@ -269,7 +272,7 @@ public class Particle
         private double mass;
         private double radius;
         private double desiredSpeed;
-        private ContagionState contagionState;
+        private InfectedState infectionState;
 
         public ParticleBuilder withId( UUID id ) {
             this.id = id;
@@ -317,8 +320,8 @@ public class Particle
             return this;
         }
 
-        public ParticleBuilder withContagionState( ContagionState state ) {
-            this.contagionState = state;
+        public ParticleBuilder withInfectedState( InfectedState state ) {
+            this.infectionState = state;
             return this;
         }
 
