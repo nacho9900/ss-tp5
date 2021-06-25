@@ -200,9 +200,9 @@ public class Particle
         return Math.PI * Math.pow( this.radius, 2 );
     }
 
-    public void sneezeOn( Random random, Particle p ) {
+    public boolean sneezeOn( Random random, Particle p ) {
         double distance = Math.sqrt( Math.pow( position.getY() - p.getPosition().getY(), 2 ) + Math.pow( position.getX() - p.getPosition().getX(), 2 ) );
-        if (distance > Environment.sneezeRadius) return;
+        if (distance > Environment.sneezeRadius) return false;
 
         double probabilityOfGettingInfected = Environment.infectionProbability * 
                                                 Environment.infectionProbabilityPerState.get(infectedState) * 
@@ -212,27 +212,28 @@ public class Particle
         //                     Environment.infectionProbabilityPerState.get(p.getInfectedState()),
         //                     Environment.defensesProbabilityPerState.get(infectedState),
         //                     probabilityOfGettingInfected);
-        boolean effectiveSneeze = random.nextDouble() < probabilityOfGettingInfected;
-        if ( effectiveSneeze ) {
+        boolean infected = random.nextDouble() < probabilityOfGettingInfected;
+        if ( infected ) {
             p.setInfectedState(InfectedState.INFECTED_SNEEZES);
         }
+        return infected;
     }
 
-    public boolean isSick() {
+    public boolean isInfected() {
         return infectedState == InfectedState.INFECTED_DONT_SNEEZE || infectedState == InfectedState.INFECTED_SNEEZES;
     }
 
     public void appendToStringBuilder( StringBuilder stringBuilder ) {
-        boolean sick = this.getInfectedState() == InfectedState.INFECTED_SNEEZES || this.getInfectedState() == InfectedState.INFECTED_DONT_SNEEZE;
+        boolean infected = this.getInfectedState() == InfectedState.INFECTED_SNEEZES || this.getInfectedState() == InfectedState.INFECTED_DONT_SNEEZE;
         stringBuilder.append( this.position.getX() )
                      .append( " " )
                      .append( this.position.getY() )
                      .append( " " )
                      .append( this.radius )
                      .append( " " )
-                     .append( sick ? 0:1 ) //R
+                     .append( infected ? 0:1 ) //R
                      .append( " " )
-                     .append( sick ? 1:0 ) //G
+                     .append( infected ? 1:0 ) //G
                      .append( " " )
                      .append( 0 ) //B
                      .append( System.lineSeparator() );

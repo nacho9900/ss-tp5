@@ -63,9 +63,10 @@ public class Environment
     public void run() {
         double timeAccumulator = 0;
         int i = 0;
-        while ( i < 10_000 ) {
+        int amountInfected = (int) this.particles.stream().filter(particle -> particle.isInfected()).count();
+        while ( i < 10_000 && amountInfected < this.particles.size() ) {
             if ( i % 1000 == 0 ) {
-                System.out.printf( "{i: %d; q: %d }%n", i, this.particles.size() );
+                System.out.printf( "{i: %d; q: %d, infected: %d}%n", i, this.particles.size(), amountInfected );
             }
 
             i++;
@@ -83,12 +84,13 @@ public class Environment
                 Target auxTarget = aux.getTarget();
                 aux.move( this.dt );
                 for (Particle aux2 : particles) {
-                    if (aux.isSick() && !aux2.isSick()) {
-                        aux.sneezeOn(random, aux2);
+                    boolean infected = false;
+                    if (aux.isInfected() && !aux2.isInfected()) {
+                        infected = aux.sneezeOn(random, aux2);
+                    } else if (!aux.isInfected() && aux2.isInfected()) {
+                        infected = aux2.sneezeOn(random, aux);
                     }
-                    if (!aux.isSick() && aux2.isSick()) {
-                        aux2.sneezeOn(random, aux);
-                    }
+                    amountInfected += infected ? 1 : 0;
                 }
                 if ( !auxTarget.reached(aux) ) {
                     Point position = aux.getPosition();
@@ -320,20 +322,11 @@ public class Environment
             return this;
         }
 
-        public Builder withInfectionProfile( double probability, double radius, List<Double> infectionProbabilityPerState, List<Double> defensesProbabilityPerState ) {
+        public Builder withInfectionProfile( double probability, double radius, Map<InfectedState, Double> infectionProbabilityPerState, Map<InfectedState, Double> defensesProbabilityPerState ) {
             this.infectionProbability = probability;
             this.sneezeRadius = radius;
-            this.infectionProbabilityPerState = new HashMap<>();
-            this.infectionProbabilityPerState.put(InfectedState.HEALTHY,              infectionProbabilityPerState.get(0));
-            this.infectionProbabilityPerState.put(InfectedState.INFECTED_DONT_SNEEZE, infectionProbabilityPerState.get(1));
-            this.infectionProbabilityPerState.put(InfectedState.INFECTED_SNEEZES,     infectionProbabilityPerState.get(2));
-            this.infectionProbabilityPerState.put(InfectedState.INMUNE,               infectionProbabilityPerState.get(3));
-            
-            this.defensesProbabilityPerState = new HashMap<>();
-            this.defensesProbabilityPerState.put(InfectedState.HEALTHY,              defensesProbabilityPerState.get(0));
-            this.defensesProbabilityPerState.put(InfectedState.INFECTED_DONT_SNEEZE, defensesProbabilityPerState.get(1));
-            this.defensesProbabilityPerState.put(InfectedState.INFECTED_SNEEZES,     defensesProbabilityPerState.get(2));
-            this.defensesProbabilityPerState.put(InfectedState.INMUNE,               defensesProbabilityPerState.get(3));
+            this.infectionProbabilityPerState = infectionProbabilityPerState;
+            this.defensesProbabilityPerState = defensesProbabilityPerState;
             return this;
         }
 
