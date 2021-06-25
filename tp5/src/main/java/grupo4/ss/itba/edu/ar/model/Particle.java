@@ -6,6 +6,7 @@ import lombok.Setter;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Random;
 import java.util.UUID;
 
 public class Particle
@@ -30,6 +31,9 @@ public class Particle
     @Getter
     @Setter
     private Particle previousState;
+    @Getter
+    @Setter
+    private ContagionState contagionState;
 
     /**
      * constants from paper "Simulating dynamical features of escape panic" A = 2x10³N B = 0.08m accelerationTime =
@@ -52,6 +56,7 @@ public class Particle
         this.radius = builder.radius;
         this.desiredSpeed = builder.desiredSpeed;
         this.previousState = null;
+        this.contagionState = builder.contagionState;
     }
 
     public void move( double dt ) {
@@ -177,6 +182,7 @@ public class Particle
                                     .withTarget( this.target )
                                     .withDesiredSpeed( this.desiredSpeed )
                                     .withRadius( this.radius )
+                                    .withContagionState( this.contagionState )
                                     .build();
 
         if ( this.acceleration != null ) {
@@ -194,16 +200,36 @@ public class Particle
         return Math.PI * Math.pow( this.radius, 2 );
     }
 
+    public void sneezeOn( Random random, Particle p ) {
+        double distance = Math.sqrt( Math.pow( position.getY() - p.getPosition().getY(), 2 ) + Math.pow( position.getX() - p.getPosition().getX(), 2 ) );
+        if (distance > 1.0 || // TODO: change 1 for a constant 'R_contagion'
+            contagionState == ContagionState.HEALTHY ||
+            contagionState == ContagionState.HEALTHY_WITH_ANTIBODIES) return;
+
+        boolean effectiveSneeze = random.nextDouble() < 0.01; // TODO: make this probability vary based on context (to be defined)
+        if ( effectiveSneeze ) {
+            ContagionState pState = p.getContagionState();
+            if ( pState == ContagionState.HEALTHY ) {
+                p.setContagionState(ContagionState.SICK_DONT_SNEEZE);
+            }
+        }
+    }
+
+    public boolean isSick() {
+        return contagionState == ContagionState.SICK_DONT_SNEEZE || contagionState == ContagionState.SICK_SNEEZES;
+    }
+
     public void appendToStringBuilder( StringBuilder stringBuilder ) {
+        boolean sick = this.getContagionState() == ContagionState.SICK_SNEEZES || this.getContagionState() == ContagionState.SICK_DONT_SNEEZE;
         stringBuilder.append( this.position.getX() )
                      .append( " " )
                      .append( this.position.getY() )
                      .append( " " )
                      .append( this.radius )
                      .append( " " )
-                     .append( 1 ) //R
+                     .append( sick ? 0:1 ) //R
                      .append( " " )
-                     .append( 0 ) //G
+                     .append( sick ? 1:0 ) //G
                      .append( " " )
                      .append( 0 ) //B
                      .append( System.lineSeparator() );
@@ -243,6 +269,7 @@ public class Particle
         private double mass;
         private double radius;
         private double desiredSpeed;
+        private ContagionState contagionState;
 
         public ParticleBuilder withId( UUID id ) {
             this.id = id;
@@ -287,6 +314,11 @@ public class Particle
 
         public ParticleBuilder withTarget( Target target ) {
             this.target = target;
+            return this;
+        }
+
+        public ParticleBuilder withContagionState( ContagionState state ) {
+            this.contagionState = state;
             return this;
         }
 
