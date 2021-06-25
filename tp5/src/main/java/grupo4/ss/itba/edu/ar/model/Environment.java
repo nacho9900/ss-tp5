@@ -63,6 +63,10 @@ public class Environment
                 Particle aux = x.getCopy();
                 Target auxTarget = aux.getTarget();
                 aux.move( this.dt );
+                for (Particle aux2 : particles) {
+                    aux.sneezeOn(random, aux2);
+                    aux2.sneezeOn(random, aux);
+                }
                 if ( !auxTarget.reached(aux) ) {
                     Point position = aux.getPosition();
                     double radius = aux.getRadius();
@@ -250,6 +254,7 @@ public class Environment
                         .withStart( targetX, targetY )
                         .withEnd( targetX+1, targetY ) // TODO: remove +1 if possible
                         .build();
+                ContagionState contagionState = random.nextDouble() < 0.1 ? ContagionState.SICK_SNEEZES : ContagionState.HEALTHY;
                 Particle particle = Particle.builder()
                                             .withId( UUID.randomUUID() )
                                             .withMass( 80 )
@@ -258,6 +263,7 @@ public class Environment
                                             .withTarget( target )
                                             .withPosition( x, y )
                                             .withVelocity( 0, 0 )
+                                            .withContagionState( contagionState )
                                             .build();
 
                 while ( !notOverlap( particle ) ) //TODO: Condicion de corte
