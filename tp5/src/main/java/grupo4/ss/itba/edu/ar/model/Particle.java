@@ -200,9 +200,9 @@ public class Particle
         return Math.PI * Math.pow( this.radius, 2 );
     }
 
-    public boolean sneezeOn( Random random, Particle p ) {
+    public boolean tryInfect( Random random, Particle p ) {
         double distance = Math.sqrt( Math.pow( position.getY() - p.getPosition().getY(), 2 ) + Math.pow( position.getX() - p.getPosition().getX(), 2 ) );
-        if (distance > Environment.sneezeRadius) return false;
+        if (distance > Environment.infectRadius) return false;
 
         double probabilityOfGettingInfected = Environment.infectionProbability * 
                                                 Environment.infectionProbabilityPerState.get(infectedState) * 
@@ -214,17 +214,17 @@ public class Particle
         //                     probabilityOfGettingInfected);
         boolean infected = random.nextDouble() < probabilityOfGettingInfected;
         if ( infected ) {
-            p.setInfectedState(InfectedState.INFECTED_SNEEZES);
+            p.setInfectedState(InfectedState.SICK);
         }
         return infected;
     }
 
     public boolean isInfected() {
-        return infectedState == InfectedState.INFECTED_DONT_SNEEZE || infectedState == InfectedState.INFECTED_SNEEZES;
+        return infectedState == InfectedState.SICK;
     }
 
     public void appendToStringBuilder( StringBuilder stringBuilder ) {
-        boolean infected = this.getInfectedState() == InfectedState.INFECTED_SNEEZES || this.getInfectedState() == InfectedState.INFECTED_DONT_SNEEZE;
+        boolean infected = this.isInfected();
         stringBuilder.append( this.position.getX() )
                      .append( " " )
                      .append( this.position.getY() )

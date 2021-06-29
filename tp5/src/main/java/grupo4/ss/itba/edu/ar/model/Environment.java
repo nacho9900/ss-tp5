@@ -26,15 +26,15 @@ public class Environment
     // New for TP Final
     private Random random;
     public static double infectionProbability;
-    public static double sneezeRadius;
+    public static double infectRadius;
     
     /* 
      * Infection probabilities
-     * For implementation see Particle.sneezeOn method
+     * For implementation see Particle.tryInfect method
      */
     // 0.0 means it doesn't infect, 1.0 means it infect with the global 'infectionProbability', higher values means its a super spreader
     public static Map<InfectedState, Double> infectionProbabilityPerState;
-    // 0.0 means it is inmune to any sneeze, 1.0 means it has no defenses, higher values means it is a higher risk individual
+    // 0.0 means it is inmune to any infection, 1.0 means it has no defenses, higher values means it is a higher risk individual
     public static Map<InfectedState, Double> defensesProbabilityPerState;
 
     // ej_a
@@ -55,7 +55,7 @@ public class Environment
                                   .sum();
         this.random = builder.random;
         Environment.infectionProbability = builder.infectionProbability;
-        Environment.sneezeRadius = builder.sneezeRadius;
+        Environment.infectRadius = builder.infectRadius;
         Environment.infectionProbabilityPerState = builder.infectionProbabilityPerState;
         Environment.defensesProbabilityPerState = builder.defensesProbabilityPerState;
     }
@@ -86,9 +86,9 @@ public class Environment
                 for (Particle aux2 : particles) {
                     boolean infected = false;
                     if (aux.isInfected() && !aux2.isInfected()) {
-                        infected = aux.sneezeOn(random, aux2);
+                        infected = aux.tryInfect(random, aux2);
                     } else if (!aux.isInfected() && aux2.isInfected()) {
-                        infected = aux2.sneezeOn(random, aux);
+                        infected = aux2.tryInfect(random, aux);
                     }
                     amountInfected += infected ? 1 : 0;
                 }
@@ -227,7 +227,7 @@ public class Environment
         private double dt2;
         private Random random;
         private double infectionProbability;
-        private double sneezeRadius;
+        private double infectRadius;
         private Map<InfectedState, Double> infectionProbabilityPerState;
         private Map<InfectedState, Double> defensesProbabilityPerState;
 
@@ -322,11 +322,18 @@ public class Environment
             return this;
         }
 
-        public Builder withInfectionProfile( double probability, double radius, Map<InfectedState, Double> infectionProbabilityPerState, Map<InfectedState, Double> defensesProbabilityPerState ) {
+        public Builder withInfectionProfile( double probability, double radius, Double infectionProbability, Double defensesProbability ) {
             this.infectionProbability = probability;
-            this.sneezeRadius = radius;
-            this.infectionProbabilityPerState = infectionProbabilityPerState;
-            this.defensesProbabilityPerState = defensesProbabilityPerState;
+            this.infectRadius = radius;
+            this.infectionProbabilityPerState = new HashMap<>();
+            infectionProbabilityPerState.put(InfectedState.HEALTHY, 0.0);
+            infectionProbabilityPerState.put(InfectedState.SICK, infectionProbability);
+            infectionProbabilityPerState.put(InfectedState.INMUNE, 0.0);
+
+            this.defensesProbabilityPerState = new HashMap<>();
+            defensesProbabilityPerState.put(InfectedState.HEALTHY, defensesProbability);
+            defensesProbabilityPerState.put(InfectedState.SICK, 1.0);
+            defensesProbabilityPerState.put(InfectedState.INMUNE, 0.0);
             return this;
         }
 
