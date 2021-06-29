@@ -27,6 +27,7 @@ public class Environment
     private Random random;
     public static double infectionProbability;
     public static double infectRadius;
+    public static double timeToCure;
     
     /* 
      * Infection probabilities
@@ -58,6 +59,7 @@ public class Environment
         Environment.infectRadius = builder.infectRadius;
         Environment.infectionProbabilityPerState = builder.infectionProbabilityPerState;
         Environment.defensesProbabilityPerState = builder.defensesProbabilityPerState;
+        Environment.timeToCure = 10.0;
     }
 
     public void run() {
@@ -83,6 +85,7 @@ public class Environment
                 Particle aux = x.getCopy();
                 Target auxTarget = aux.getTarget();
                 aux.move( this.dt );
+                aux.addInfectedTime( this.dt );
                 for (Particle aux2 : particles) {
                     boolean infected = false;
                     if (aux.isInfected() && !aux2.isInfected()) {
@@ -305,7 +308,7 @@ public class Environment
                                             .withTarget( target )
                                             .withPosition( x, y )
                                             .withVelocity( 0, 0 )
-                                            .withInfectedState( infectedState )
+                                            .withInfectedState( infectedState, 0.0 )
                                             .build();
 
                 while ( !notOverlap( particle ) ) //TODO: Condicion de corte

@@ -34,6 +34,7 @@ public class Particle
     @Getter
     @Setter
     private InfectedState infectedState;
+    private Double infectedTime;
 
     /**
      * constants from paper "Simulating dynamical features of escape panic" A = 2x10³N B = 0.08m accelerationTime =
@@ -57,6 +58,7 @@ public class Particle
         this.desiredSpeed = builder.desiredSpeed;
         this.previousState = null;
         this.infectedState = builder.infectionState;
+        this.infectedTime = builder.infectedTime;
     }
 
     public void move( double dt ) {
@@ -182,7 +184,7 @@ public class Particle
                                     .withTarget( this.target )
                                     .withDesiredSpeed( this.desiredSpeed )
                                     .withRadius( this.radius )
-                                    .withInfectedState( this.infectedState )
+                                    .withInfectedState( this.infectedState, this.infectedTime )
                                     .build();
 
         if ( this.acceleration != null ) {
@@ -207,11 +209,6 @@ public class Particle
         double probabilityOfGettingInfected = Environment.infectionProbability * 
                                                 Environment.infectionProbabilityPerState.get(infectedState) * 
                                                 Environment.defensesProbabilityPerState.get(p.getInfectedState());
-        // System.out.printf("Prob: (%f * %f * %f) = %f\n",
-        //                     Environment.infectionProbability,
-        //                     Environment.infectionProbabilityPerState.get(p.getInfectedState()),
-        //                     Environment.defensesProbabilityPerState.get(infectedState),
-        //                     probabilityOfGettingInfected);
         boolean infected = random.nextDouble() < probabilityOfGettingInfected;
         if ( infected ) {
             p.setInfectedState(InfectedState.SICK);
@@ -223,19 +220,43 @@ public class Particle
         return infectedState == InfectedState.SICK;
     }
 
+    public void addInfectedTime(Double dt) {
+        if (isInfected()) {
+            this.infectedTime += dt;
+            if (this.infectedTime > Environment.timeToCure) {
+                this.infectedState = InfectedState.INMUNE;
+            }
+        }
+    }
+
     public void appendToStringBuilder( StringBuilder stringBuilder ) {
+        double R, G, B;
         boolean infected = this.isInfected();
+        boolean inmune = this.infectedState == InfectedState.INMUNE;
+        if ( isInfected() ) {
+            R = 0;
+            G = 1;
+            B = 0;
+        } else if ( this.infectedState == InfectedState.INMUNE ) {
+            R = 0;
+            G = 0;
+            B = 1;
+        } else {
+            R = 1;
+            G = 1;
+            B = 1;
+        }
         stringBuilder.append( this.position.getX() )
                      .append( " " )
                      .append( this.position.getY() )
                      .append( " " )
                      .append( this.radius )
                      .append( " " )
-                     .append( infected ? 0:1 ) //R
+                     .append( R ) //R
                      .append( " " )
-                     .append( infected ? 1:0 ) //G
+                     .append( G ) //G
                      .append( " " )
-                     .append( 0 ) //B
+                     .append( B ) //B
                      .append( System.lineSeparator() );
     }
 
@@ -274,6 +295,7 @@ public class Particle
         private double radius;
         private double desiredSpeed;
         private InfectedState infectionState;
+        private double infectedTime;
 
         public ParticleBuilder withId( UUID id ) {
             this.id = id;
@@ -321,8 +343,9 @@ public class Particle
             return this;
         }
 
-        public ParticleBuilder withInfectedState( InfectedState state ) {
+        public ParticleBuilder withInfectedState( InfectedState state, Double infectedTime ) {
             this.infectionState = state;
+            this.infectedTime = infectedTime;
             return this;
         }
 
