@@ -63,8 +63,8 @@ public class App
         // time it takes for a simulation to have no healthy people, only sick and inmune
 
         // varying the N
-        for ( int n = 10; n <= 130; n+=20) {
-            Environment e = run(.9, .1, .0, .01, 1.0, 1.0, 53845, n, 1.0, 1e-2, 1e-2);
+        for ( int n = 50; n <= 210; n+=20) {
+            Environment e = run(.9, .1, .0, .002, 1.0, 1.0, 538455, n, 1.0, 1e-2, 1e-2);
             System.out.println(e.getTotalTime());
             e.printToFile();
         }

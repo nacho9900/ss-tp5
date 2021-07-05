@@ -60,7 +60,7 @@ public class Environment
         Environment.infectRadius = builder.infectRadius;
         Environment.infectionProbabilityPerState = builder.infectionProbabilityPerState;
         Environment.defensesProbabilityPerState = builder.defensesProbabilityPerState;
-        Environment.timeToCure = 15.0;
+        Environment.timeToCure = 22.0; // the equivalent in steps is steps = timeToCure * dt
     }
 
     public void run() {
