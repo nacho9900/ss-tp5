@@ -220,6 +220,10 @@ public class Particle
         return infectedState == InfectedState.SICK;
     }
 
+    public boolean isHealthy() {
+        return infectedState == InfectedState.HEALTHY;
+    }
+
     public void addInfectedTime(Double dt) {
         if (isInfected()) {
             this.infectedTime += dt;

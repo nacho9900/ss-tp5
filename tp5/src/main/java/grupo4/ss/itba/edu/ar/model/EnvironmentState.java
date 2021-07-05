@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 public class EnvironmentState
 {
+    @Getter
     private final List<Particle> particles;
     @Getter
     private final double time;

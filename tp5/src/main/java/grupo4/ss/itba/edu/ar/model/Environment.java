@@ -67,9 +67,18 @@ public class Environment
         double timeAccumulator = 0;
         int i = 0;
         int amountInfected = (int) this.particles.stream().filter(particle -> particle.isInfected()).count();
-        while ( i < 10_000 && amountInfected < this.particles.size() ) {
+        while ( i < 20_000 ) {
             if ( i % 1000 == 0 ) {
                 System.out.printf( "{i: %d; q: %d, infected: %d}%n", i, this.particles.size(), amountInfected );
+            }
+            boolean diseaseCannotSpread = 
+                // No more sick to spread disease
+                particles.stream().filter(particle -> particle.isInfected()).count() == 0 ||
+                // No more healthy to get infected
+                particles.stream().filter(particle -> particle.isHealthy()).count() == 0;
+
+            if ( diseaseCannotSpread ) {
+                break;
             }
 
             i++;
@@ -180,7 +189,7 @@ public class Environment
     }
 
     private void printParticles() {
-        String particlesName = "particles.xyz";
+        String particlesName = "particles_N-"+states.get(0).getParticles().size()+".xyz";
         StringBuilder builder = new StringBuilder();
         try ( BufferedWriter writer = new BufferedWriter( new FileWriter( particlesName ) ) ) {
             for ( EnvironmentState state : this.states ) {

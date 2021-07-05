@@ -66,9 +66,7 @@ public class App
         for ( int n = 10; n <= 130; n+=20) {
             Environment e = run(.9, .1, .0, .01, 1.0, 1.0, 53845, n, 1.0, 1e-2, 1e-2);
             System.out.println(e.getTotalTime());
-            if (n == 110) {
-                e.printToFile();
-            }
+            e.printToFile();
         }
     }
 }
