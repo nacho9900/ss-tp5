@@ -13,7 +13,8 @@ import grupo4.ss.itba.edu.ar.model.InfectedState;
 public class App
 {
     public static void main( String[] args ) throws Exception {
-        defaultRun();
+        // defaultRun();
+        timeUntilZeroHealthy();
     }
 
     public static void defaultRun() throws Exception {
@@ -33,6 +34,41 @@ public class App
                                              .build();
         environment.run();
         environment.printToFile();
-        // environment.printDensityOverTime();
+    }
+
+    public static Environment run(double healthyPercentage, double sickPercentage, double inmunePercentage,
+        double generalProbability, double infectProbability, double defendProbability, int seed, int N,
+        double infectionRadius, double dt, double dt2) throws Exception {
+        Map<InfectedState, Double> infectionDistribution = new HashMap<>();
+        infectionDistribution.put(InfectedState.HEALTHY, healthyPercentage);
+        infectionDistribution.put(InfectedState.SICK, sickPercentage);
+        infectionDistribution.put(InfectedState.INMUNE, inmunePercentage);
+        
+        if (Math.abs(healthyPercentage+sickPercentage+inmunePercentage - 1.0) > 0.00001) {
+            throw new IllegalArgumentException("Distribution percentages must add up to 1");
+        }
+
+        Environment environment = Environment.builder()
+                                             .withSeed( seed )
+                                             .withParticlesQuantityAndInfectedDistribution( N, infectionDistribution )
+                                             .withInfectionProfile( generalProbability, infectionRadius, infectProbability, defendProbability )
+                                             .withDt( dt )
+                                             .withDt2( dt2 )
+                                             .build();
+        environment.run();
+        return environment;
+    }
+
+    public static void timeUntilZeroHealthy() throws Exception {
+        // time it takes for a simulation to have no healthy people, only sick and inmune
+
+        // varying the N
+        for ( int n = 10; n <= 130; n+=20) {
+            Environment e = run(.9, .1, .0, .01, 1.0, 1.0, 53845, n, 1.0, 1e-2, 1e-2);
+            System.out.println(e.getTotalTime());
+            if (n == 110) {
+                e.printToFile();
+            }
+        }
     }
 }

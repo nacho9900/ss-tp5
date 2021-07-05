@@ -28,6 +28,7 @@ public class Environment
     public static double infectionProbability;
     public static double infectRadius;
     public static double timeToCure;
+    private double totalTime;
     
     /* 
      * Infection probabilities
@@ -59,7 +60,7 @@ public class Environment
         Environment.infectRadius = builder.infectRadius;
         Environment.infectionProbabilityPerState = builder.infectionProbabilityPerState;
         Environment.defensesProbabilityPerState = builder.defensesProbabilityPerState;
-        Environment.timeToCure = 10.0;
+        Environment.timeToCure = 15.0;
     }
 
     public void run() {
@@ -137,6 +138,11 @@ public class Environment
             timeAccumulator += this.dt;
             this.particles = particles;
         }
+        this.totalTime = i;
+    }
+
+    public double getTotalTime() {
+        return totalTime;
     }
 
     public void printDensityOverTime() {
