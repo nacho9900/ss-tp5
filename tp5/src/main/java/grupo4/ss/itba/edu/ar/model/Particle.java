@@ -231,13 +231,13 @@ public class Particle
 
     public void appendToStringBuilder( StringBuilder stringBuilder ) {
         double R, G, B;
-        boolean infected = this.isInfected();
+        boolean infected = isInfected();
         boolean inmune = this.infectedState == InfectedState.INMUNE;
-        if ( isInfected() ) {
+        if ( infected ) {
             R = 0;
             G = 1;
             B = 0;
-        } else if ( this.infectedState == InfectedState.INMUNE ) {
+        } else if ( inmune ) {
             R = 0;
             G = 0;
             B = 1;

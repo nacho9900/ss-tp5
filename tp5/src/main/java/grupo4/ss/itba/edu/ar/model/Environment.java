@@ -274,6 +274,12 @@ public class Environment
                 this.random = seed.map( Random::new )
                                     .orElseGet( Random::new );
             }
+            if (Math.abs(infectedDistribution.values().stream().reduce((x, y) -> x + y).get() - 1.0) > 0.0001) {
+                throw new Exception("Infected distribution does not sum 1.0");
+            }
+            int quantityInmune = (int) (infectedDistribution.get(InfectedState.INMUNE) * quantity);
+            int quantitySick = (int) (infectedDistribution.get(InfectedState.SICK) * quantity);
+            // int quantityHealthy = quantity - quantityInmune - quantitySick;
 
             for ( int i = 0; i < quantity; i++ ) {
                 double radius = MathHelper.randBetween( random, 0.5 / 2.0, 0.7 / 2.0 );
@@ -287,18 +293,14 @@ public class Environment
                         .withEnd( targetX+1, targetY ) // TODO: remove +1 if possible
                         .build();
                 InfectedState infectedState = null;
-                double infectionStateChoice = random.nextDouble();
-                double currWeight = 0.0;
-                for (InfectedState _infectedState : infectedDistribution.keySet()) {
-                    double weight = infectedDistribution.get( _infectedState );
-                    currWeight += weight;
-                    if ( currWeight >= infectionStateChoice ) {
-                        infectedState = _infectedState;
-                        break;
-                    }
-                }
-                if (infectedState == null) {
-                    throw new Exception("Infected distribution does not sum 1.0");
+                if (quantityInmune > 0) {
+                    infectedState = InfectedState.INMUNE;
+                    quantityInmune--;
+                } else if (quantitySick > 0) {
+                    infectedState = InfectedState.SICK;
+                    quantitySick--;
+                } else {
+                    infectedState = InfectedState.HEALTHY;
                 }
                 Particle particle = Particle.builder()
                                             .withId( UUID.randomUUID() )
