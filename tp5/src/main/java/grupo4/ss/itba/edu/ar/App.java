@@ -50,7 +50,7 @@ public class App
 
         Environment environment = Environment.builder()
                                              .withSeed( seed )
-                                             .withParticlesQuantityAndInfectedDistribution( N, infectionDistribution )
+                                             .withParticlesQuantityAndInfectedDistribution( N, infectionDistribution, 0.1 )
                                              .withInfectionProfile( generalProbability, infectionRadius, infectProbability, defendProbability )
                                              .withDt( dt )
                                              .withDt2( dt2 )

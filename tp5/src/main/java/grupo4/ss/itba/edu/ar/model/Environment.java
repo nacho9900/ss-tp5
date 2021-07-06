@@ -284,7 +284,7 @@ public class Environment
             return this;
         }
 
-        public Builder withParticlesQuantityAndInfectedDistribution( int quantity, Map<InfectedState, Double> infectedDistribution ) throws Exception {
+        public Builder withParticlesQuantityAndInfectedDistribution( int quantity, Map<InfectedState, Double> infectedDistribution, double stillPercentage ) throws Exception {
             if (this.random != null) {
                 this.random = seed.map( Random::new )
                                     .orElseGet( Random::new );
@@ -295,6 +295,7 @@ public class Environment
             int quantityInmune = (int) (infectedDistribution.get(InfectedState.INMUNE) * quantity);
             int quantitySick = (int) (infectedDistribution.get(InfectedState.SICK) * quantity);
             // int quantityHealthy = quantity - quantityInmune - quantitySick;
+            int quantityStill = (int) (quantity * stillPercentage);
 
             for ( int i = 0; i < quantity; i++ ) {
                 double radius = MathHelper.randBetween( random, 0.5 / 2.0, 0.7 / 2.0 );
@@ -317,11 +318,16 @@ public class Environment
                 } else {
                     infectedState = InfectedState.HEALTHY;
                 }
+                double desiredSpeed = 2;
+                if (quantityStill > 0) {
+                    desiredSpeed = 0.000001; // cannot be 0, but this works
+                    quantityStill--;
+                }
                 Particle particle = Particle.builder()
                                             .withId( UUID.randomUUID() )
                                             .withMass( 80 )
                                             .withRadius( radius )
-                                            .withDesiredSpeed( 2 )
+                                            .withDesiredSpeed( desiredSpeed )
                                             .withTarget( target )
                                             .withPosition( x, y )
                                             .withVelocity( 0, 0 )
