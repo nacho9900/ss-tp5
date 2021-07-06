@@ -160,7 +160,6 @@ public class Environment
         String r = String.format( "%.2f", radius ).replace(".","_");
         String staticFilename = "nonHealthy_r-"+ r +".csv";
         List<Double> nonHealthyOverTime = this.states.stream().map(s -> (double) s.getParticles().stream().filter(p -> !p.isHealthy()).count()).collect(Collectors.toList());
-        System.out.println(nonHealthyOverTime);
 
         try ( BufferedWriter writer = new BufferedWriter( new FileWriter( staticFilename ) ) ) {
             StringBuilder builder = new StringBuilder();
