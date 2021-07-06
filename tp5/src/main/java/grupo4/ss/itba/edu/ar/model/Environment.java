@@ -6,6 +6,7 @@ import grupo4.ss.itba.edu.ar.utils.OutputColor;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -13,6 +14,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class Environment
 {
@@ -154,6 +156,23 @@ public class Environment
         return totalTime;
     }
 
+    public void printNonHealthyOverTime(double radius) {
+        String r = String.format( "%.2f", radius ).replace(".","_");
+        String staticFilename = "nonHealthy_r-"+ r +".csv";
+        List<Double> nonHealthyOverTime = this.states.stream().map(s -> (double) s.getParticles().stream().filter(p -> !p.isHealthy()).count()).collect(Collectors.toList());
+        System.out.println(nonHealthyOverTime);
+
+        try ( BufferedWriter writer = new BufferedWriter( new FileWriter( staticFilename ) ) ) {
+            StringBuilder builder = new StringBuilder();
+            nonHealthyOverTime.forEach( x -> builder.append( x )
+                                                      .append( System.lineSeparator() ) );
+            writer.write( builder.toString() );
+        }
+        catch ( IOException e ) {
+            e.printStackTrace();
+        }
+    }
+
     public void printDensityOverTime() {
         String staticFilename = "density.csv";
 
@@ -168,9 +187,14 @@ public class Environment
         }
     }
 
+    public void printToFile( Double radius ) {
+        printStatic();
+        printParticles(radius);
+    }
+
     public void printToFile() {
         printStatic();
-        printParticles();
+        printParticles(null);
     }
 
     public void printToFileParticlesOverTime( StringBuilder builder, String fileName ) {
@@ -188,8 +212,14 @@ public class Environment
         }
     }
 
-    private void printParticles() {
-        String particlesName = "particles_N-"+states.get(0).getParticles().size()+".xyz";
+    private void printParticles( Double radius ) {
+        String particlesName;
+        if (radius == null) {
+            particlesName = "particles_N-"+states.get(0).getParticles().size()+".xyz";
+        } else {
+            String r = String.format( "%.2f", radius ).replace(".","_");
+            particlesName = "particles_N-"+ states.get(0).getParticles().size() +"_r-"+ r +".xyz";
+        }
         StringBuilder builder = new StringBuilder();
         try ( BufferedWriter writer = new BufferedWriter( new FileWriter( particlesName ) ) ) {
             for ( EnvironmentState state : this.states ) {
