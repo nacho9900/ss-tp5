@@ -145,6 +145,28 @@ public class Environment
         }
     }
 
+    public void printDistributionOverTime(double staticPercentage, int N) {
+        String _staticPercentage = String.format( "%.2f", staticPercentage ).replace(".","_");
+        String staticFilename = "distribution_static-"+ _staticPercentage +"_seed-"+ seed +".csv";
+        List<Double> sickOverTime = this.states.stream().map(s -> (double) s.getParticles().stream().filter(p -> p.isInfected()).count()).collect(Collectors.toList());
+        sickOverTime = sickOverTime.stream().map(i -> (double)(i/N)).collect(Collectors.toList());
+        List<Double> inmuneOverTime = this.states.stream().map(s -> (double) s.getParticles().stream().filter(p -> p.getInfectedState() == InfectedState.INMUNE).count()).collect(Collectors.toList());
+        inmuneOverTime = inmuneOverTime.stream().map(i -> (double)(i/N)).collect(Collectors.toList());
+
+        try ( BufferedWriter writer = new BufferedWriter( new FileWriter( staticFilename ) ) ) {
+            StringBuilder builder = new StringBuilder();
+            for (int i = 0; i < sickOverTime.size(); i++) {
+                double sick = sickOverTime.get(i);
+                double inmune = inmuneOverTime.get(i);
+                builder.append( sick + " " + inmune ).append( System.lineSeparator() );
+            }
+            writer.write( builder.toString() );
+        }
+        catch ( IOException e ) {
+            e.printStackTrace();
+        }
+    }
+
     public void printDensityOverTime() {
         String staticFilename = "density.csv";
 
@@ -159,23 +181,23 @@ public class Environment
         }
     }
 
-    public void printToFile( Double radius ) {
+    public void printToFile( String name, Double value ) {
         printStatic();
-        printParticles(radius);
+        printParticles(name, value);
     }
 
     public void printToFile() {
         printStatic();
-        printParticles(null);
+        printParticles(null, null);
     }
 
-    private void printParticles( Double radius ) {
+    private void printParticles( String varName, Double varValue ) {
         String particlesName;
-        if (radius == null) {
+        if (varValue == null) {
             particlesName = "particles_N-"+states.get(0).getParticles().size()+".xyz";
         } else {
-            String r = String.format( "%.2f", radius ).replace(".","_");
-            particlesName = "particles_N-"+ states.get(0).getParticles().size() +"_r-"+ r +"_seed-"+ seed +".xyz";
+            String val = String.format( "%.2f", varValue ).replace(".","_");
+            particlesName = "particles_N-"+ states.get(0).getParticles().size() +"_"+varName+"-"+ val +"_seed-"+ seed +".xyz";
         }
         StringBuilder builder = new StringBuilder();
         try ( BufferedWriter writer = new BufferedWriter( new FileWriter( particlesName ) ) ) {

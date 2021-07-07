@@ -26,7 +26,7 @@ for r in r_list:
       y_for_r.append(y)
   y_avg = [avg(y_time) for y_time in zip(*y_for_r)]
 
-  # Commented version skips some deviation lines so you can see the average line
+  # Commented version skips some deviation lines so you can see the average line (only for debugging purposes)
   # y_std = [stdev(y_time)*(i%100 == 0) for i, y_time in enumerate(zip(*y_for_r))]
   y_std = [stdev(y_time) for y_time in zip(*y_for_r)]
   

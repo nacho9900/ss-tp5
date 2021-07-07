@@ -15,7 +15,8 @@ public class App
     public static void main( String[] args ) throws Exception {
         // defaultRun();
         // timeUntilZeroHealthy();
-        nonHealthyAmountPerTime();
+        // nonHealthyAmountPerTime();
+        nonHealthyPercentagePerTime();
     }
 
     public static void defaultRun() throws Exception {
@@ -70,7 +71,7 @@ public class App
         for ( int n = 50; n <= 190; n+=15) {
             Environment e = run(.9, .1, .0, .002, 1.0, 1.0, 53845, n, radius, 1e-2, 1e-2, 0.0);
             System.out.println(e.getTotalTime());
-            e.printToFile(radius);
+            e.printToFile("r", radius);
         }
     }
 
@@ -82,7 +83,21 @@ public class App
             for (int seed = 0; seed < 10; seed++) {
                 Environment e = run(.9, .1, .0, .002, 1.0, 1.0, seed, 90, r, 1e-2, 1e-2, 0.0);
                 e.printNonHealthyOverTime(r);
-                e.printToFile(r);
+                e.printToFile("r", r);
+            }
+        }
+    }
+
+    // ej 3
+    public static void nonHealthyPercentagePerTime() throws Exception {
+        // nonHealthy = sick + inmune (people who once got sick)
+
+        int N = 90;
+        for ( double staticPercentage = 0.0; staticPercentage <= 1.0; staticPercentage+=0.1) {
+            for (int seed = 0; seed < 10; seed++) {
+                Environment e = run(.9, .1, .0, .002, 1.0, 1.0, seed, N, 1.0, 1e-2, 1e-2, staticPercentage);
+                e.printDistributionOverTime(staticPercentage, N);
+                e.printToFile("static", staticPercentage);
             }
         }
     }
