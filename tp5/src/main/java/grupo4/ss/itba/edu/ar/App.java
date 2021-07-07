@@ -66,10 +66,11 @@ public class App
         // time it takes for a simulation to have no healthy people, only sick and inmune
 
         // varying the N
-        for ( int n = 50; n <= 210; n+=20) {
-            Environment e = run(.9, .1, .0, .002, 1.0, 1.0, 538455, n, 1.0, 1e-2, 1e-2, 0.0);
+        Double radius = 1.0;
+        for ( int n = 50; n <= 190; n+=15) {
+            Environment e = run(.9, .1, .0, .002, 1.0, 1.0, 53845, n, radius, 1e-2, 1e-2, 0.0);
             System.out.println(e.getTotalTime());
-            e.printToFile();
+            e.printToFile(radius);
         }
     }
 
@@ -78,9 +79,11 @@ public class App
         // nonHealthy = sick + inmune (people who once got sick)
 
         for ( double r = 0.5; r <= 2.1; r+=0.2) {
-            Environment e = run(.9, .1, .0, .002, 1.0, 1.0, 53845, 90, r, 1e-2, 1e-2, 0.0);
-            e.printNonHealthyOverTime(r);
-            e.printToFile(r);
+            for (int seed = 0; seed < 10; seed++) {
+                Environment e = run(.9, .1, .0, .002, 1.0, 1.0, seed, 90, r, 1e-2, 1e-2, 0.0);
+                e.printNonHealthyOverTime(r);
+                e.printToFile(r);
+            }
         }
     }
 }

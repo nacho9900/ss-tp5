@@ -6,7 +6,6 @@ import grupo4.ss.itba.edu.ar.utils.OutputColor;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -31,6 +30,7 @@ public class Environment
     public static double infectRadius;
     public static double timeToCure;
     private double totalTime;
+    public final int seed;
     
     /* 
      * Infection probabilities
@@ -42,7 +42,6 @@ public class Environment
     public static Map<InfectedState, Double> defensesProbabilityPerState;
 
     // ej_a
-    private final List<Double> dischargeTimes = new LinkedList<>();
     private final List<Double> densityOverTime = new LinkedList<>();
 
     private Environment( Builder builder ) {
@@ -58,6 +57,7 @@ public class Environment
                                   .mapToDouble( Particle::getArea )
                                   .sum();
         this.random = builder.random;
+        this.seed = builder.seed.orElse(0);
         Environment.infectionProbability = builder.infectionProbability;
         Environment.infectRadius = builder.infectRadius;
         Environment.infectionProbabilityPerState = builder.infectionProbabilityPerState;
@@ -87,11 +87,6 @@ public class Environment
             List<Particle> particles = new LinkedList<>();
             final double currentTime = i * this.dt;
 
-            double rightestX = 0;
-            double leftestX = 20;
-            double topmostY = 0;
-            int count = 0;
-
             for ( Particle x : this.particles ) {
                 x.setForceAndAcceleration( this.particles, this.walls );
                 Particle aux = x.getCopy();
@@ -107,26 +102,8 @@ public class Environment
                     }
                     amountInfected += infected ? 1 : 0;
                 }
-                if ( !auxTarget.reached(aux) ) {
-                    Point position = aux.getPosition();
-                    double radius = aux.getRadius();
-                    count++;
-
-                    if ( position.getX() + radius > rightestX ) {
-                        rightestX = position.getX() + radius;
-                    }
-
-                    if ( position.getX() - radius < leftestX ) {
-                        leftestX = position.getX() - radius;
-                    }
-
-                    if ( position.getY() + radius > topmostY ) {
-                        topmostY = position.getY() + radius;
-                    }
-                } else {
+                if ( auxTarget.reached(aux) ) {
                     aux.setTarget( this.getRandomTarget(aux.getRadius()) );
-                    // this.dischargeTimes.add( currentTime );
-                    // this.area -= aux.getArea();
                 }
                 particles.add( aux );
             }
@@ -136,10 +113,6 @@ public class Environment
                                                  .withParticles( this.particles )
                                                  .withTime( currentTime )
                                                  .build() );
-
-                if ( count > 1 ) {
-                    this.densityOverTime.add( this.area / ( topmostY * ( rightestX - leftestX ) ) );
-                }
 
                 if ( timeAccumulator >= this.dt2 ) {
                     timeAccumulator = 0;
@@ -158,7 +131,7 @@ public class Environment
 
     public void printNonHealthyOverTime(double radius) {
         String r = String.format( "%.2f", radius ).replace(".","_");
-        String staticFilename = "nonHealthy_r-"+ r +".csv";
+        String staticFilename = "nonHealthy_r-"+ r +"_seed-"+ seed +".csv";
         List<Double> nonHealthyOverTime = this.states.stream().map(s -> (double) s.getParticles().stream().filter(p -> !p.isHealthy()).count()).collect(Collectors.toList());
 
         try ( BufferedWriter writer = new BufferedWriter( new FileWriter( staticFilename ) ) ) {
@@ -196,28 +169,13 @@ public class Environment
         printParticles(null);
     }
 
-    public void printToFileParticlesOverTime( StringBuilder builder, String fileName ) {
-        try ( BufferedWriter writer = new BufferedWriter( new FileWriter( fileName ) ) ) {
-            for ( Double dischargeTime : this.dischargeTimes ) {
-                builder.setLength( 0 );
-                builder.append( dischargeTime )
-                       .append( System.lineSeparator() );
-                writer.write( builder.toString() );
-                writer.flush();
-            }
-        }
-        catch ( IOException e ) {
-            e.printStackTrace();
-        }
-    }
-
     private void printParticles( Double radius ) {
         String particlesName;
         if (radius == null) {
             particlesName = "particles_N-"+states.get(0).getParticles().size()+".xyz";
         } else {
             String r = String.format( "%.2f", radius ).replace(".","_");
-            particlesName = "particles_N-"+ states.get(0).getParticles().size() +"_r-"+ r +".xyz";
+            particlesName = "particles_N-"+ states.get(0).getParticles().size() +"_r-"+ r +"_seed-"+ seed +".xyz";
         }
         StringBuilder builder = new StringBuilder();
         try ( BufferedWriter writer = new BufferedWriter( new FileWriter( particlesName ) ) ) {
