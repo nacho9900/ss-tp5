@@ -31,8 +31,8 @@ public class Environment
     public static double timeToCure;
     private double totalTime;
     public final int seed;
-    
-    /* 
+
+    /*
      * Infection probabilities
      * For implementation see Particle.tryInfect method
      */
@@ -73,7 +73,7 @@ public class Environment
             if ( i % 1000 == 0 ) {
                 System.out.printf( "{i: %d; q: %d, infected: %d}%n", i, this.particles.size(), amountInfected );
             }
-            boolean diseaseCannotSpread = 
+            boolean diseaseCannotSpread =
                 // No more sick to spread disease
                 particles.stream().filter(particle -> particle.isInfected()).count() == 0 ||
                 // No more healthy to get infected
@@ -310,7 +310,7 @@ public class Environment
                 double radius = MathHelper.randBetween( random, 0.5 / 2.0, 0.7 / 2.0 );
                 double x = MathHelper.randBetween( random, 0 + radius, 20 - radius );
                 double y = MathHelper.randBetween( random, 0 + radius, 20 - radius );
-                
+
                 double targetX = MathHelper.randBetween( this.random, 0 + radius, 20 - radius );
                 double targetY = MathHelper.randBetween( this.random, 0 + radius, 20 - radius );
                 Target target = Target.builder()
@@ -329,7 +329,7 @@ public class Environment
                 }
                 double desiredSpeed = 2;
                 if (quantityStill > 0) {
-                    desiredSpeed = 0.000001; // cannot be 0, but this works
+                    desiredSpeed = 0;
                     quantityStill--;
                 }
                 Particle particle = Particle.builder()

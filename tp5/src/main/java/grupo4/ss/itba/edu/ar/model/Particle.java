@@ -323,8 +323,8 @@ public class Particle
         }
 
         public ParticleBuilder withDesiredSpeed( double desiredSpeed ) {
-            if ( desiredSpeed <= 0 ) {
-                throw new IllegalArgumentException( "Desired Speed of a Particle cannot be less or equals 0" );
+            if ( desiredSpeed < 0 ) {
+                throw new IllegalArgumentException( "Desired Speed of a Particle cannot be less than 0" );
             }
             this.desiredSpeed = desiredSpeed;
             return this;

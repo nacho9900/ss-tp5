@@ -1,0 +1,12 @@
+
+N particulas en un recinto cerrado, cierta proporcion con velocidad max 2 m/s y el resto siempre 0, cierta proporcion enferma, curados y sanos.
+
+Cada particula comienza con un target random dentro del recinto, una vez alcanzado el target, se vuelve a asignar un target random.
+
+Cuando la particula esta a un radio R de otra particula enferma, en cada dt se da una probabilidad de contagio definida por las probas.
+
+probabilidad:
+ * probabilidad general de contagio (Pg)
+ * probabilidad de contagiar (Pe)
+ * probabilidad de contagiarse (Ps)
+
