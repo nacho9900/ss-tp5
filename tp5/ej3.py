@@ -44,8 +44,10 @@ for sick_avg, inmune_avg, static in zip(sicks_avg, inmunes_avg, static_percentag
   ax1.set_xlabel('Tiempo (s)', fontsize=27)
   ax1.set_ylabel(f'Distribución con {int(static*100)}% inmoviles', fontsize=27)
   ax1.tick_params(axis='both', which='major', labelsize=20, width=2.5, length=10)
-  ax1.stackplot(x, sick_avg, inmune_avg, [1.0-sick-inmune for sick, inmune in zip(sick_avg, inmune_avg)], labels=['Enfermos', 'Curados', 'Sanos'])
+  ax1.stackplot(x, sick_avg, inmune_avg, [1.0-sick-inmune for sick, inmune in zip(sick_avg, inmune_avg)], labels=['Enfermos', 'Curados', 'Sanos'], colors=['tab:green', 'tab:blue', 'tab:orange'])
+  ax1.margins(0, 0) # Set margins to avoid "whitespace"
   plt.legend(loc='upper left', fontsize=18)
   plt.grid()
-  plt.show()
+  p = '{0:.2f}'.format(static).replace('.', ',')
+  plt.savefig(f'ej3_static-{p}')
 

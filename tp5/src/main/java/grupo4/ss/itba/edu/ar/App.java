@@ -1,7 +1,12 @@
 package grupo4.ss.itba.edu.ar;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import grupo4.ss.itba.edu.ar.model.Environment;
@@ -14,9 +19,9 @@ public class App
 {
     public static void main( String[] args ) throws Exception {
         // defaultRun();
-        // timeUntilZeroHealthy();
+        timeUntilZeroHealthy();
         // nonHealthyAmountPerTime();
-        nonHealthyPercentagePerTime();
+        // nonHealthyPercentagePerTime();
     }
 
     public static void defaultRun() throws Exception {
@@ -68,10 +73,36 @@ public class App
 
         // varying the N
         Double radius = 1.0;
-        for ( int n = 50; n <= 190; n+=15) {
-            Environment e = run(.9, .1, .0, .002, 1.0, 1.0, 53845, n, radius, 1e-2, 1e-2, 0.0);
-            System.out.println(e.getTotalTime());
-            e.printToFile("r", radius);
+        List<Double> timesTillZeroHealthy = new LinkedList<>();
+        int seedAmount = 25;
+        for ( int n = 50; n <= 200; n+=15) {
+            for (int seed = 0; seed < seedAmount; seed++) {
+                Environment e = run(.9, .1, .0, .002, 1.0, 1.0, seed, n, radius, 1e-2, 1e-2, 0.0);
+                timesTillZeroHealthy.add(e.getTotalTime());
+                e.printToFile("r", radius);
+            }
+        }
+        String r = String.format( "%.2f", radius ).replace(".","_");
+        String staticFilename = "ej1_r-"+ r +".csv";
+
+        try ( BufferedWriter writer = new BufferedWriter( new FileWriter( staticFilename ) ) ) {
+            StringBuilder builder = new StringBuilder();
+            
+            int sim = seedAmount;
+            for (int i = 0; i < timesTillZeroHealthy.size(); i++) {
+                sim--;
+                builder.append(timesTillZeroHealthy.get(i));
+                if (sim == 0) {
+                    builder.append( System.lineSeparator() );
+                    sim = seedAmount;
+                } else {
+                    builder.append( ", " );
+                }
+            }
+            writer.write( builder.toString() );
+        }
+        catch ( IOException e ) {
+            e.printStackTrace();
         }
     }
 
