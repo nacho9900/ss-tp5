@@ -28,7 +28,8 @@ public class Environment
     private Random random;
     public static double infectionProbability;
     public static double infectRadius;
-    public static double timeToCure;
+    public static double minTimeToCure;
+    public static double maxTimeToCure;
     private double totalTime;
     public final int seed;
 
@@ -62,7 +63,8 @@ public class Environment
         Environment.infectRadius = builder.infectRadius;
         Environment.infectionProbabilityPerState = builder.infectionProbabilityPerState;
         Environment.defensesProbabilityPerState = builder.defensesProbabilityPerState;
-        Environment.timeToCure = 22.0; // the equivalent in steps is steps = timeToCure * dt
+        Environment.minTimeToCure = 19.0; // the equivalent in steps is steps = timeToCure * dt
+        Environment.maxTimeToCure = 22.0; // the equivalent in steps is steps = timeToCure * dt
     }
 
     public void run() {
@@ -332,6 +334,7 @@ public class Environment
                     desiredSpeed = 0;
                     quantityStill--;
                 }
+                Double timeToCure = MathHelper.randBetween(random, 19.0, 22.0);
                 Particle particle = Particle.builder()
                                             .withId( UUID.randomUUID() )
                                             .withMass( 80 )
@@ -341,6 +344,7 @@ public class Environment
                                             .withPosition( x, y )
                                             .withVelocity( 0, 0 )
                                             .withInfectedState( infectedState, 0.0 )
+                                            .withTimeToCure(timeToCure)
                                             .build();
 
                 while ( !notOverlap( particle ) ) //TODO: Condicion de corte

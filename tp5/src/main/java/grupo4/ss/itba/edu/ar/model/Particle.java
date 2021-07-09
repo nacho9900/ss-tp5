@@ -35,6 +35,8 @@ public class Particle
     @Setter
     private InfectedState infectedState;
     private Double infectedTime;
+    @Getter
+    private double timeToCure;
 
     /**
      * constants from paper "Simulating dynamical features of escape panic" A = 2x10³N B = 0.08m accelerationTime =
@@ -59,6 +61,7 @@ public class Particle
         this.previousState = null;
         this.infectedState = builder.infectionState;
         this.infectedTime = builder.infectedTime;
+        this.timeToCure = builder.timeToCure;
     }
 
     public void move( double dt ) {
@@ -185,6 +188,7 @@ public class Particle
                                     .withDesiredSpeed( this.desiredSpeed )
                                     .withRadius( this.radius )
                                     .withInfectedState( this.infectedState, this.infectedTime )
+                                    .withTimeToCure( this.timeToCure )
                                     .build();
 
         if ( this.acceleration != null ) {
@@ -227,7 +231,7 @@ public class Particle
     public void addInfectedTime(Double dt) {
         if (isInfected()) {
             this.infectedTime += dt;
-            if (this.infectedTime > Environment.timeToCure) {
+            if (this.infectedTime > this.timeToCure) {
                 this.infectedState = InfectedState.INMUNE;
             }
         }
@@ -300,6 +304,7 @@ public class Particle
         private double desiredSpeed;
         private InfectedState infectionState;
         private double infectedTime;
+        private double timeToCure;
 
         public ParticleBuilder withId( UUID id ) {
             this.id = id;
@@ -350,6 +355,11 @@ public class Particle
         public ParticleBuilder withInfectedState( InfectedState state, Double infectedTime ) {
             this.infectionState = state;
             this.infectedTime = infectedTime;
+            return this;
+        }
+
+        public ParticleBuilder withTimeToCure( Double timeToCure ) {
+            this.timeToCure = timeToCure;
             return this;
         }
 

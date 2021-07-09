@@ -3,7 +3,6 @@ package grupo4.ss.itba.edu.ar;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -19,9 +18,9 @@ public class App
 {
     public static void main( String[] args ) throws Exception {
         // defaultRun();
-        timeUntilZeroHealthy();
-        // nonHealthyAmountPerTime();
-        // nonHealthyPercentagePerTime();
+        timeUntilZeroHealthy(); // ej1
+        // nonHealthyAmountPerTime(); // ej2
+        // nonHealthyPercentagePerTime(); // ej3
     }
 
     public static void defaultRun() throws Exception {
@@ -34,9 +33,9 @@ public class App
 
         Environment environment = Environment.builder()
                                              .withSeed( 28 )
-                                             .withParticlesQuantityAndInfectedDistribution( 80, infectionDistribution, 0.0 )
-                                             .withInfectionProfile( 0.001, 1.0, infectionProbability, defensesProbability )
-                                             .withDt( 1e-2 )
+                                             .withParticlesQuantityAndInfectedDistribution( 90, infectionDistribution, 0.0 )
+                                             .withInfectionProfile( 0.002, 1.0, infectionProbability, defensesProbability )
+                                             .withDt( 1e-4 )
                                              .withDt2( 1e-2 )
                                              .build();
         environment.run();
@@ -77,7 +76,7 @@ public class App
         int seedAmount = 25;
         for ( int n = 50; n <= 200; n+=15) {
             for (int seed = 0; seed < seedAmount; seed++) {
-                Environment e = run(.9, .1, .0, .002, 1.0, 1.0, seed, n, radius, 1e-2, 1e-2, 0.0);
+                Environment e = run(.9, .1, .0, .002, 1.0, 1.0, seed, n, radius, 1e-4, 1e-2, 0.0);
                 timesTillZeroHealthy.add(e.getTotalTime());
                 e.printToFile("r", radius);
             }
@@ -112,7 +111,7 @@ public class App
 
         for ( double r = 0.5; r <= 2.1; r+=0.2) {
             for (int seed = 0; seed < 10; seed++) {
-                Environment e = run(.9, .1, .0, .002, 1.0, 1.0, seed, 90, r, 1e-2, 1e-2, 0.0);
+                Environment e = run(.9, .1, .0, .002, 1.0, 1.0, seed, 90, r, 1e-4, 1e-2, 0.0);
                 e.printNonHealthyOverTime(r);
                 e.printToFile("r", r);
             }
@@ -126,7 +125,7 @@ public class App
         int N = 90;
         for ( double staticPercentage = 0.0; staticPercentage <= 1.0; staticPercentage+=0.1) {
             for (int seed = 0; seed < 10; seed++) {
-                Environment e = run(.9, .1, .0, .002, 1.0, 1.0, seed, N, 1.0, 1e-2, 1e-2, staticPercentage);
+                Environment e = run(.9, .1, .0, .002, 1.0, 1.0, seed, N, 1.0, 1e-4, 1e-2, staticPercentage);
                 e.printDistributionOverTime(staticPercentage, N);
                 e.printToFile("static", staticPercentage);
             }

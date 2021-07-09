@@ -23,7 +23,6 @@ with open(f'ej1_r-1,00.csv') as f:
     ys_std.append(stdev(values_for_n))
 
 x = [n for n in range(50, 201, 15)]
-print(len(x), len(ys_avg))
 ax1.errorbar(x, ys_avg, fmt='o', yerr=ys_std)
 
 # plt.legend(loc='best', fontsize=18)
